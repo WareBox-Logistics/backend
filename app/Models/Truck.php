@@ -9,6 +9,8 @@ class Truck extends Model
 {
     use HasFactory;
 
+    protected $table = "truck";
+
     protected $fillable = [
         'plates',
         'vin',
@@ -20,4 +22,5 @@ class Truck extends Model
     public function driver() {
         return $this->belongsTo(Employee::class);
     }
+    
 }

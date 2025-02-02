@@ -33,7 +33,11 @@ class Employee extends Authenticatable
         ];
     }
 
-    public function role () {
+    public function role() {
         return $this->belongsTo(Role::class);
+    }
+
+    public function truck() {
+        return $this->hasOne(Truck::class, 'driver');
     }
 }

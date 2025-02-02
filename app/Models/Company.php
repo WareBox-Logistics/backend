@@ -17,7 +17,24 @@ class Company extends Model
         'service'
     ];
 
-    public function service() { 
-        return $this->belongsTo(Service::class); 
+    public function service() {
+        return $this->belongsTo(Service::class);
     }
+
+    public function users() {
+        return $this->hasMany(User::class);
+    }
+
+    public function categories() {
+        return $this->hasMany(Category::class);
+    }
+
+    public function locations() {
+        return $this->hasMany(Location::class);
+    }
+
+    public function routes() {
+        return $this->hasMany(Route::class);
+    }
+    
 }

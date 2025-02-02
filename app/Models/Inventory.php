@@ -9,6 +9,8 @@ class Inventory extends Model
 {
     use HasFactory;
 
+    protected $table = "inventory";
+
     protected $fillable = [
         'warehouse',
         'product',
@@ -22,4 +24,5 @@ class Inventory extends Model
     public function product() {
         return $this->belongsTo(Product::class);
     }
+
 }

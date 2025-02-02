@@ -9,6 +9,8 @@ class Delivery extends Model
 {
     use HasFactory;
 
+    protected $table = "delivery";
+
     protected $fillable = [
         'truck',
         'trailer',
@@ -31,7 +33,17 @@ class Delivery extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function created_by(){
+    public function createdBy() {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function products() {
+        return $this->belongsToMany(Product::class, 'delivery_detail')
+                    ->withPivot('qty');
+    }
+
+    public function routes() {
+        return $this->belongsToMany(Route::class, 'routes_delivery')
+                    ->withPivot('isBackup');
     }
 }

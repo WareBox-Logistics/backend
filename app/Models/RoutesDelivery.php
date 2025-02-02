@@ -9,6 +9,8 @@ class RoutesDelivery extends Model
 {
     use HasFactory;
 
+    protected $table = "routes_delivery";
+
     protected $fillable = [
         'delivery',
         'route',

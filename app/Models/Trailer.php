@@ -9,6 +9,8 @@ class Trailer extends Model
 {
     use HasFactory;
 
+    protected $table = 'trailer';
+
     protected $fillable = [
         'plates',
         'vin',

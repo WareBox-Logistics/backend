@@ -9,6 +9,8 @@ class Location extends Model
 {
     use HasFactory;
 
+    protected $table = "location";
+
     protected $fillable = [
         'name',
         'latitude',
@@ -19,4 +21,5 @@ class Location extends Model
     public function company() {
         return $this->belongsTo(Company::class);
     }
+
 }

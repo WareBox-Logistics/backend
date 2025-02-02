@@ -54,26 +54,34 @@ class AuthController extends Controller
     
 
     public function loginEmployee(Request $request) {
-        $request->validate([
-            'email' => 'required|email|exists:employee',
-            'password' => 'required'
-        ]);
-
-        $user = Employee::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)){
+        try {
+            $request->validate([
+                'email' => 'required|email|exists:employee',
+                'password' => 'required'
+            ]);
+    
+            $user = Employee::where('email', $request->email)->first();
+    
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'message' => 'The provided credentials are incorrect.'
+                ], 401);
+            }
+    
+            $token = $user->createToken($user->email);
+    
             return response()->json([
-                'message' => 'The provided credentials are incorrect.'
-            ],401);
+                'user' => $user,
+                'token' => $token->plainTextToken
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred during login.',
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        $token = $user->createToken($user->email);
-
-        return response()->json([
-            'user' => $user,
-            'token' => $token->plainTextToken
-        ],200);
     }
+    
     
     public function loginUser(Request $request) {
         try {
