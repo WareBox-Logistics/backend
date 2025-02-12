@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\Location;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+class LocationController extends Controller
 {
-    
     public function index() {
-       try{
-            $roles = Role::all();
-
-            return response()->json([
-                'roles'=>$roles
-            ]);
-
-       }catch(\Exception $e){
-            return response()->json([
-                'error'=>'Failed to get roles',
-                'message'=>$e->getMessage()
-            ]);
-       }
-    }
-
-    public function show($id){
         try{
-
-            $role = Role::find($id);
-
-            if(!$role){
-                return response()->json([
-                    'message'=>'role not found'
-                ]);
-            }
+            $locations =  Location::all();
 
             return response()->json([
-                'role'=>$role
+                'locations'=>$locations
             ]);
-
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error fetching the role',
+                'error'=>'error fetching locations',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id) {
+        try{
+            $location =  Location::findOrFail($id);
+
+            return response()->json([
+                'location'=>$location
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'error fetching location',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -51,21 +41,27 @@ class RoleController extends Controller
         try{
 
             $fields = $request->validate([
-                'name'=>'required|max:20'
+                'name'=>'required|max:50',
+                'latitude'=>'required|max:100',
+                'longitude'=>'required|max:100',
+                'company' => 'required'
             ]);
 
-            $role = Role::create($fields);
+            $location = Location::create($fields);
 
             return response()->json([
-                'role'=>$role
+                'location'=>$location
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a role',
+                'error'=>'Error creating a location',
                 'message'=>$e->getMessage()
             ]);
         }
     }
 
+    //upd
+
+    //delete
 }

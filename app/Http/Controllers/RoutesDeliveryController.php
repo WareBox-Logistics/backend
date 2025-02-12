@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\RoutesDelivery;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+class RoutesDeliveryController extends Controller
 {
-    
     public function index() {
-       try{
-            $roles = Role::all();
-
-            return response()->json([
-                'roles'=>$roles
-            ]);
-
-       }catch(\Exception $e){
-            return response()->json([
-                'error'=>'Failed to get roles',
-                'message'=>$e->getMessage()
-            ]);
-       }
-    }
-
-    public function show($id){
         try{
-
-            $role = Role::find($id);
-
-            if(!$role){
-                return response()->json([
-                    'message'=>'role not found'
-                ]);
-            }
+            $routes =  RoutesDelivery::all();
 
             return response()->json([
-                'role'=>$role
+                'routes'=>$routes
             ]);
-
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error fetching the role',
+                'error'=>'error fetching routes',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id) {
+        try{
+            $route =  RoutesDelivery::findOrFail($id);
+
+            return response()->json([
+                'route'=>$route
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'error fetching route',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -51,21 +41,26 @@ class RoleController extends Controller
         try{
 
             $fields = $request->validate([
-                'name'=>'required|max:20'
+                'delivery'=>'required',
+                'route'=>'required',
+                'isBackup'=>'required'
             ]);
 
-            $role = Role::create($fields);
+            $route = RoutesDelivery::create($fields);
 
             return response()->json([
-                'role'=>$role
+                'route'=>$route
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a role',
+                'error'=>'Error creating a route',
                 'message'=>$e->getMessage()
             ]);
         }
     }
 
+    //upd
+
+    //delete
 }

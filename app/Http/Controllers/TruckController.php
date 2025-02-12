@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\Truck;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+class TruckController extends Controller
 {
-    
     public function index() {
-       try{
-            $roles = Role::all();
-
-            return response()->json([
-                'roles'=>$roles
-            ]);
-
-       }catch(\Exception $e){
-            return response()->json([
-                'error'=>'Failed to get roles',
-                'message'=>$e->getMessage()
-            ]);
-       }
-    }
-
-    public function show($id){
         try{
-
-            $role = Role::find($id);
-
-            if(!$role){
-                return response()->json([
-                    'message'=>'role not found'
-                ]);
-            }
+            $trucks =  Truck::all();
 
             return response()->json([
-                'role'=>$role
+                'trucks'=>$trucks
             ]);
-
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error fetching the role',
+                'error'=>'error fetching trucks',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id) {
+        try{
+            $truck =  Truck::findOrFail($id);
+
+            return response()->json([
+                'truck'=>$truck
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'error fetching truck',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -51,21 +41,28 @@ class RoleController extends Controller
         try{
 
             $fields = $request->validate([
-                'name'=>'required|max:20'
+                'plates'=>'required|max:7|unique:truck',
+                'vin'=>'required|max:17|unique:truck',
+                'brand'=>'required|max:30',
+                'model'=>'required|max:30',
+                'driver'=>'required',
             ]);
 
-            $role = Role::create($fields);
+            $truck = Truck::create($fields);
 
             return response()->json([
-                'role'=>$role
+                'trailer'=>$truck
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a role',
+                'error'=>'Error creating a truck',
                 'message'=>$e->getMessage()
             ]);
         }
     }
 
+    //upd
+
+    //delete
 }

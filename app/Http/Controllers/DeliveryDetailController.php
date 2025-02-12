@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\DeliveryDetail;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+class DeliveryDetailController extends Controller
 {
-    
     public function index() {
-       try{
-            $roles = Role::all();
-
-            return response()->json([
-                'roles'=>$roles
-            ]);
-
-       }catch(\Exception $e){
-            return response()->json([
-                'error'=>'Failed to get roles',
-                'message'=>$e->getMessage()
-            ]);
-       }
-    }
-
-    public function show($id){
         try{
-
-            $role = Role::find($id);
-
-            if(!$role){
-                return response()->json([
-                    'message'=>'role not found'
-                ]);
-            }
+            $details =  DeliveryDetail::all();
 
             return response()->json([
-                'role'=>$role
+                'details'=>$details
             ]);
-
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error fetching the role',
+                'error'=>'error fetching delivery details',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id) {
+        try{
+            $detail =  DeliveryDetail::findOrFail($id);
+
+            return response()->json([
+                'detail'=>$detail
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'error fetching delivery detail',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -51,21 +41,26 @@ class RoleController extends Controller
         try{
 
             $fields = $request->validate([
-                'name'=>'required|max:20'
+                'delivery'=>'required',
+                'product'=>'required',
+                'qty' => 'required|numeric|min:1'
             ]);
 
-            $role = Role::create($fields);
+            $detail = DeliveryDetail::create($fields);
 
             return response()->json([
-                'role'=>$role
+                'detail'=>$detail
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a role',
+                'error'=>'Error creating a delivery detail',
                 'message'=>$e->getMessage()
             ]);
         }
     }
 
+    //upd
+
+    //delete
 }

@@ -13,7 +13,10 @@ class Route extends Model
 
     protected $fillable = [
         'origin',
-        'destination'
+        'destination',
+        'polyline',
+        'name',
+        'company'
     ];
 
     public function originLocation() {

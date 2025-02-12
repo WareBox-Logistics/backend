@@ -14,7 +14,7 @@ class Warehouse extends Model
     protected $fillable = [
         'name',
         'altitude',
-        'longitude'
+        'latitude'
     ];
 
     public function inventory() {

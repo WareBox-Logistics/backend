@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\Trailer;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+class TrailerController extends Controller
 {
-    
     public function index() {
-       try{
-            $roles = Role::all();
-
-            return response()->json([
-                'roles'=>$roles
-            ]);
-
-       }catch(\Exception $e){
-            return response()->json([
-                'error'=>'Failed to get roles',
-                'message'=>$e->getMessage()
-            ]);
-       }
-    }
-
-    public function show($id){
         try{
-
-            $role = Role::find($id);
-
-            if(!$role){
-                return response()->json([
-                    'message'=>'role not found'
-                ]);
-            }
+            $trailers =  Trailer::all();
 
             return response()->json([
-                'role'=>$role
+                'trailers'=>$trailers
             ]);
-
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error fetching the role',
+                'error'=>'error fetching trailers',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id) {
+        try{
+            $trailer =  Trailer::findOrFail($id);
+
+            return response()->json([
+                'trailer'=>$trailer
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'error fetching trailer',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -51,21 +41,27 @@ class RoleController extends Controller
         try{
 
             $fields = $request->validate([
-                'name'=>'required|max:20'
+                'plates'=>'required|max:7|unique:trailer',
+                'vin'=>'required|max:17|unique:trailer',
+                'volume'=>'required|numeric',
+                'brand'=>'required|max:30',
             ]);
 
-            $role = Role::create($fields);
+            $trailer = Trailer::create($fields);
 
             return response()->json([
-                'role'=>$role
+                'trailer'=>$trailer
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a role',
+                'error'=>'Error creating a trailer',
                 'message'=>$e->getMessage()
             ]);
         }
     }
 
+    //upd
+
+    //delete
 }

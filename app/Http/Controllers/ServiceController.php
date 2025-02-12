@@ -2,46 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
-class RoleController extends Controller
+class ServiceController extends Controller
 {
-    
     public function index() {
-       try{
-            $roles = Role::all();
-
-            return response()->json([
-                'roles'=>$roles
-            ]);
-
-       }catch(\Exception $e){
-            return response()->json([
-                'error'=>'Failed to get roles',
-                'message'=>$e->getMessage()
-            ]);
-       }
-    }
-
-    public function show($id){
         try{
-
-            $role = Role::find($id);
-
-            if(!$role){
-                return response()->json([
-                    'message'=>'role not found'
-                ]);
-            }
+            $services =  Service::all();
 
             return response()->json([
-                'role'=>$role
+                'services'=>$services
             ]);
-
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error fetching the role',
+                'error'=>'error fetching services',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function show($id) {
+        try{
+            $service =  Service::findOrFail($id);
+
+            return response()->json([
+                'service'=>$service
+            ]);
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'error fetching service',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -51,21 +41,24 @@ class RoleController extends Controller
         try{
 
             $fields = $request->validate([
-                'name'=>'required|max:20'
+                'type'=>'required|max:25',
             ]);
 
-            $role = Role::create($fields);
+            $service = Service::create($fields);
 
             return response()->json([
-                'role'=>$role
+                'service'=>$service
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a role',
+                'error'=>'Error creating a service',
                 'message'=>$e->getMessage()
             ]);
         }
     }
 
+    //upd
+
+    //delete
 }

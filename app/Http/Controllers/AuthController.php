@@ -7,6 +7,7 @@ use App\Models\UserBox;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Exception;
+use App\Models\Role;
 
 class AuthController extends Controller
 {
@@ -69,6 +70,8 @@ class AuthController extends Controller
             }
     
             $token = $user->createToken($user->email);
+            $roleName = Role::find($user->role);
+            $user->role=$roleName->name;
     
             return response()->json([
                 'user' => $user,
