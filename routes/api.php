@@ -13,8 +13,14 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TrailerController;
 use App\Http\Controllers\TruckController;
 use App\Http\Controllers\WarehouseController;
-use App\Models\Role;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BoxInventoryController;
+use App\Http\Controllers\PalletController;
+use App\Http\Controllers\DockAssignmentController;
+use App\Http\Controllers\DockController;
+use App\Http\Controllers\RackController;
+use App\Http\Controllers\StorageRackPalletController;
+
 //E N D P O I N T S
 
 //AUTH 
@@ -47,6 +53,13 @@ Route::apiResource('truck',TruckController::class)->middleware('auth:sanctum');
 //warehouse
 Route::apiResource('warehouse',WarehouseController::class)->middleware('auth:sanctum');
 
+//Derian
+Route::apiResource('box-inventory', BoxInventoryController::class)->middleware('auth:sanctum');
+Route::apiResource('pallet', PalletController::class)->middleware('auth:sanctum');
+Route::apiResource('dock-assigmnet', DockAssignmentController::class)->middleware('auth:sanctum');
+Route::apiResource('dock',DockController::class)->middleware('auth:sanctum');
+Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
+Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 
 
 

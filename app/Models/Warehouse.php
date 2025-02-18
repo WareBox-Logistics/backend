@@ -20,4 +20,20 @@ class Warehouse extends Model
     public function inventory() {
         return $this->hasMany(Inventory::class);
     }
+
+    public function pallets()
+    {
+        return $this->hasMany(Pallet::class, 'warehouse');
+    }
+
+    public function racks()
+    {
+        return $this->hasMany(Rack::class, 'warehouse');
+    }
+
+    public function docks()
+    {
+        return $this->hasMany(Dock::class, 'warehouse');
+    
+    }
 }

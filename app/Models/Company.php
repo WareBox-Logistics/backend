@@ -39,4 +39,8 @@ class Company extends Model
         return $this->hasMany(Route::class);
     }
     
+    public function pallets()
+    {
+        return $this->hasMany(Pallet::class, 'company');
+    }
 }

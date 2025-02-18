@@ -25,4 +25,9 @@ class Inventory extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function boxInventories()
+    {
+        return $this->hasMany(BoxInventory::class, 'inventory');
+    }
+
 }
