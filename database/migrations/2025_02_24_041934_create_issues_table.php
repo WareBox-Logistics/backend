@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('issues', function (Blueprint $table) {
             $table->id();
-            $table->string('status')->check('WIP','DONE','WAIT');
+            $table->string('status')->check("status IN  ('WIP','DONE','WAIT')");
             $table->string('description');
             $table->unsignedBigInteger('report');
             $table->foreign('report')->references('id')->on('reports');

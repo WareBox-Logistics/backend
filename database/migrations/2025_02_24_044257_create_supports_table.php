@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('description');
             $table->unsignedBigInteger('issue');
             $table->foreign('issue')->references('id')->on('issues');
-            $table->string('status')->check('WIP','DONE','WAIT');
+            $table->string('status')->check("status IN  ('WIP','DONE','WAIT')");
             $table->timestamps();
         });
     }
