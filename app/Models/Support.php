@@ -16,5 +16,8 @@ class support extends Model
         'status',
     ];
     
+    public function issue(){
+        return $this->belongsTo(Issue::class, 'issue');
+    }
     
 }
