@@ -15,6 +15,7 @@ class support extends Model
         'description',
         'issue',
         'status',
+        'operator'
     ];
     
     public function issue(){

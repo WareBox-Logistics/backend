@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('description');
             $table->unsignedBigInteger('report');
             $table->foreign('report')->references('id')->on('reports');
+            $table->unsignedBigInteger('operator');
+            $table->foreign('operator')->references('id')->on('employee');
             $table->boolean('support');
             $table->timestamps();
         });

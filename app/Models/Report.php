@@ -16,6 +16,7 @@ class Report extends Model
         'ubication',
         'issue',
         'description',
+        'driver'
     ];  
 
     public function route(){

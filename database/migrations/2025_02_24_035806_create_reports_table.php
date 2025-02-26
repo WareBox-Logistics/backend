@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('ubication');
             $table->boolean('issue');
             $table->string('description');
+            $table->unsignedBigInteger('driver');
+            $table->foreign('driver')->references('id')->on('employee');
             $table->timestamps();
         });
     }
