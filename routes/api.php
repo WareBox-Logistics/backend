@@ -18,8 +18,11 @@ use App\Http\Controllers\BoxInventoryController;
 use App\Http\Controllers\PalletController;
 use App\Http\Controllers\DockAssignmentController;
 use App\Http\Controllers\DockController;
+use App\Http\Controllers\IssueController;
 use App\Http\Controllers\RackController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StorageRackPalletController;
+use App\Http\Controllers\SupportController;
 
 //E N D P O I N T S
 
@@ -61,6 +64,10 @@ Route::apiResource('dock',DockController::class)->middleware('auth:sanctum');
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 
+//Dispatch
+Route::apiResource('report', ReportController::class);
+Route::apiResource('issue', IssueController::class);
+Route::apiResource('suppoert', SupportController::class);
 
 
 
