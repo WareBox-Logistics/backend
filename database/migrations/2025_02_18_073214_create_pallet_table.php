@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('pallet', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->unsignedBigInteger('company');
             $table->unsignedBigInteger('warehouse');
             $table->decimal('weight')->check('weight > 0');
             $table->decimal('volume')->check('volume > 0');
             $table->string('status', 50)->check("status IN ('Created', 'Stored', 'In Transit', 'Delivered')");
+            $table->boolean('verified');
+            $table->timestamps();
 
             $table->foreign('company')->references('id')->on('company');
             $table->foreign('warehouse')->references('id')->on('warehouse');

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('latitude');
-            $table->string('altitude');
+            $table->string('longitude');
+            $table->boolean('is_warehouse');
             $table->unsignedBigInteger('company');
             $table->timestamps();
 

@@ -18,13 +18,17 @@ return new class extends Migration
             $table->unsignedBigInteger('company');
             $table->unsignedBigInteger('created_by');
             $table->enum('status', ['Pending','Docking','Loading','Delivering','Emptying']);
-            $table->timestamps();
+            $table->unsignedBigInteger('origin');
+            $table->unsignedBigInteger('destination');
             $table->dateTime('date_created')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->dateTime('finished_date')->nullable();
+            $table->timestamps();
 
             $table->foreign('truck')->references('id')->on('truck');
             $table->foreign('trailer')->references('id')->on('trailer');
             $table->foreign('company')->references('id')->on('company');
+            $table->foreign('origin')->references('id')->on('location');
+            $table->foreign('destination')->references('id')->on('location');
             $table->foreign('created_by')->references('id')->on('employee');
 
         });

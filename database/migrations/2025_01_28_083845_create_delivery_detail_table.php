@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('delivery_detail', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('delivery');
-            $table->unsignedBigInteger('product');
+            $table->unsignedBigInteger('pallet');
             $table->integer('qty');
             $table->timestamps();
 
             $table->foreign('delivery')->references('id')->on('delivery');
-            $table->foreign('product')->references('id')->on('product');
+            $table->foreign('pallet')->references('id')->on('pallet');
         });
     }
 

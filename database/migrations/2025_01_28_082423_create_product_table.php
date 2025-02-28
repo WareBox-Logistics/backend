@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('description');
             $table->string('sku');
             $table->decimal('price', 10, 2);
+            $table->string('image');
             $table->unsignedBigInteger('company');
             $table->unsignedBigInteger('category');
             $table->timestamps();
