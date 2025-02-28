@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('level');
             $table->timestamp('stored_at');
             $table->timestamp('removed_at');
+            $table->timestamps();
 
             $table->foreign('pallet')->references('id')->on('pallet');
             $table->foreign('rack')->references('id')->on('rack');
