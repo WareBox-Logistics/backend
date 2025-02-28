@@ -15,6 +15,7 @@ class Location extends Model
         'name',
         'latitude',
         'longitude',
+        'is_warehouse',
         'company'
     ];
 

@@ -15,8 +15,8 @@ class Issue extends Model
         'status',
         'description',
         'report',
-        'support',
-        'operator'
+        'operator',
+        'support'
     ];  
 
     public function report(){

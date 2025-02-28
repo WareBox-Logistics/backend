@@ -15,12 +15,12 @@ class StorageRackPallet extends Model
 
     public $incrementing = false;
 
-    public $timestamps = true;
-
     protected $fillable = [
         'pallet',
         'rack',
+        'warehouse',
         'position',
+        'level',
         'stored_at',
         'status',
     ];

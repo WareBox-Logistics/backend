@@ -34,10 +34,6 @@ class Company extends Model
     public function locations() {
         return $this->hasMany(Location::class);
     }
-
-    public function routes() {
-        return $this->hasMany(Route::class);
-    }
     
     public function pallets()
     {

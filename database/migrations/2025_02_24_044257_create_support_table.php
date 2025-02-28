@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reports', function (Blueprint $table) {
+        Schema::create('support', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('route');
-            $table->foreign('route')->references('id')->on('route');
-            $table->string('ubication');
-            $table->boolean('issue');
             $table->string('description');
-            $table->unsignedBigInteger('driver');
-            $table->foreign('driver')->references('id')->on('employee');
+            $table->unsignedBigInteger('issue');
+            $table->string('status')->check("status IN  ('WIP','DONE','WAIT')");
+            $table->unsignedBigInteger('operator');
             $table->timestamps();
+
+            $table->foreign('issue')->references('id')->on('issue');
+            $table->foreign('operator')->references('id')->on('employee');
         });
     }
 
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('reports');
+        Schema::dropIfExists('supports');
     }
 };

@@ -11,21 +11,17 @@ class Rack extends Model
 
     protected $table = 'rack';
 
-    protected $primaryKey = 'id';
-
-    public $incrementing = true;
-
-    protected $keyType = 'int';
-
-    public $timestamps = true;
-
     protected $fillable = [
         'warehouse',
         'section',
-        'level',
+        'height',
+        'width',
+        'depth',
         'status',
         'capacity_volume',
         'used_volume',
+        'capacity_weight',
+        'used_weight',
     ];
 
     public function warehouse()

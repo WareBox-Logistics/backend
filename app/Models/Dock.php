@@ -11,14 +11,6 @@ class Dock extends Model
 
     protected $table = 'dock';
 
-    protected $primaryKey = 'id';
-
-    public $incrementing = true;
-
-    protected $keyType = 'int';
-
-    public $timestamps = true;
-
     protected $fillable = [
         'status',
         'type',

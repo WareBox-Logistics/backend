@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('supports', function (Blueprint $table) {
+        Schema::create('issue', function (Blueprint $table) {
             $table->id();
-            $table->string('description');
-            $table->unsignedBigInteger('issue');
-            $table->foreign('issue')->references('id')->on('issues');
             $table->string('status')->check("status IN  ('WIP','DONE','WAIT')");
+            $table->string('description');
+            $table->unsignedBigInteger('report');
             $table->unsignedBigInteger('operator');
-            $table->foreign('operator')->references('id')->on('employee');
+            $table->boolean('support');
             $table->timestamps();
+
+            $table->foreign('report')->references('id')->on('report');
+            $table->foreign('operator')->references('id')->on('employee');
         });
     }
 
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('supports');
+        Schema::dropIfExists('issues');
     }
 };

@@ -13,7 +13,7 @@ class DeliveryDetail extends Model
 
     protected $fillable =[
         'delivery',
-        'product',
+        'pallet',
         'qty'
     ];
 

@@ -12,11 +12,7 @@ class DockAssignment extends Model
     protected $table = 'dock_assignment';
 
     protected $primaryKey = ['dock', 'truck'];
-
-    public $incrementing = false;
-
-    public $timestamps = true;
-
+    
     protected $fillable = [
         'dock',
         'truck',

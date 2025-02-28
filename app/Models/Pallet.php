@@ -11,20 +11,13 @@ class Pallet extends Model
 
     protected $table = 'pallet';
 
-    protected $primaryKey = 'id';
-
-    public $incrementing = true;
-
-    protected $keyType = 'int';
-
-    public $timestamps = true;
-
     protected $fillable = [
         'company',
         'warehouse',
         'weight',
         'volume',
         'status',
+        'verified'
     ];
 
     public function company()

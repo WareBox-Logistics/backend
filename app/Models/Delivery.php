@@ -17,6 +17,8 @@ class Delivery extends Model
         'company',
         'created_by',
         'status',
+        'origin',
+        'destination',
         'date_created',
         'finished_date'
     ];
@@ -42,8 +44,4 @@ class Delivery extends Model
                     ->withPivot('qty');
     }
 
-    public function routes() {
-        return $this->belongsToMany(Route::class, 'routes_delivery')
-                    ->withPivot('isBackup');
-    }
 }

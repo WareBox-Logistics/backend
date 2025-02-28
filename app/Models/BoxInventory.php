@@ -10,22 +10,16 @@ class BoxInventory extends Model
 
         use HasFactory;
     
-        protected $table = 'box_inventory';
-    
-        protected $primaryKey = 'id';
-    
-        public $incrementing = true;
-    
-        protected $keyType = 'int';
-    
-        public $timestamps = true;
-    
+        protected $table = 'box_inventory';        
         protected $fillable = [
+            'pallet',
+            'product',
             'qty',
             'weight',
+            'height',
+            'width',
+            'dept',
             'volume',
-            'pallet',
-            'inventory',
         ];
     
         public function pallet()
