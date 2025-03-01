@@ -12,8 +12,8 @@ class Report extends Model
     protected $table = 'report';
 
     protected $fillable = [
-       'route',
        'ubication',
+       'problem',
        'issue',
        'description',
        'driver'
