@@ -35,13 +35,17 @@ class Delivery extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function createdBy() {
+    public function location(){
+        return $this->belongsTo(Location::class);
+    }
+
+    //is this necessary?
+    public function employee() {
         return $this->belongsTo(Employee::class);
     }
 
-    public function products() {
-        return $this->belongsToMany(Product::class, 'delivery_detail')
-                    ->withPivot('qty');
+    public function deliveryDetail(){
+        return $this->hasMany(DeliveryDetail::class);
     }
 
 }

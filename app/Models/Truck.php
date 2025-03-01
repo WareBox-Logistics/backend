@@ -22,5 +22,13 @@ class Truck extends Model
     public function driver() {
         return $this->belongsTo(Employee::class);
     }
+
+    public function deliveries(){
+        return $this->hasMany(Delivery::class);
+    }
+
+    public function dockAssigments(){
+        return $this->hasMany(DockAssignment::class);
+    }
     
 }

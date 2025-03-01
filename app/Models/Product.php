@@ -29,12 +29,8 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function inventory() {
+    public function inventories() {
         return $this->hasMany(Inventory::class);
     }
 
-    public function deliveries() {
-        return $this->belongsToMany(Delivery::class, 'delivery_detail')
-                    ->withPivot('qty');
-    }
 }

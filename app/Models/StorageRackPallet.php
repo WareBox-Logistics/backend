@@ -34,4 +34,8 @@ class StorageRackPallet extends Model
     {
         return $this->belongsTo(Rack::class, 'rack');
     }
+
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
+    }
 }

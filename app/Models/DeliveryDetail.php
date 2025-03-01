@@ -21,11 +21,7 @@ class DeliveryDetail extends Model
         return $this->belongsTo(Delivery::class);
     }
 
-    public function product() {
-        return $this->belongsTo(Product::class);
-    }
-
     public function pallet(){
-        return $this->belongsTo(Pallet::class, 'pallet');
+        return $this->belongsTo(Pallet::class);
     }
 }

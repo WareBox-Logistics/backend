@@ -33,5 +33,9 @@ class Rack extends Model
     {
         return $this->hasMany(StorageRackPallet::class, 'rack');
     }
+
+    public function storageHistories(){
+        return $this->hasMany(Storage_history::class);
+    }
 }
 

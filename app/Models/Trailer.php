@@ -16,5 +16,9 @@ class Trailer extends Model
         'vin',
         'volume',
         'brand',
-    ]; 
+    ];
+    
+    public function deliveries(){
+        return $this->hasMany(Delivery::class);
+    }
 }

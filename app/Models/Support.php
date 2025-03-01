@@ -21,5 +21,9 @@ class support extends Model
     public function issue(){
         return $this->belongsTo(Issue::class, 'issue');
     }
+
+    public function operator(){
+        return $this->belongsTo(Employee::class);
+    }
     
 }

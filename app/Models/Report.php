@@ -18,4 +18,16 @@ class Report extends Model
        'description',
        'driver'
     ];
+
+    public function issues(){
+        return $this->hasMany(Issue::class);
+    }
+
+    public function problem(){
+        return $this->belongsTo(Problem::class);
+    }
+
+    public function driver(){
+        return $this->belongsTo(Employee::class);
+    }
 }

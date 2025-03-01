@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('report', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('route');
             $table->string('ubication');
+            $table->unsignedBigInteger('problem');
             $table->boolean('issue');
             $table->string('description');
             $table->unsignedBigInteger('driver');
             $table->timestamps();
 
-            $table->foreign('route')->references('id')->on('route');
+            $table->foreign('problem')->references('id')->on('problem');
             $table->foreign('driver')->references('id')->on('employee');
         });
     }

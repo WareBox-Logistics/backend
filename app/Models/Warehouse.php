@@ -17,7 +17,7 @@ class Warehouse extends Model
         'latitude'
     ];
 
-    public function inventory() {
+    public function inventories() {
         return $this->hasMany(Inventory::class);
     }
 
@@ -34,6 +34,13 @@ class Warehouse extends Model
     public function docks()
     {
         return $this->hasMany(Dock::class, 'warehouse');
-    
+    }
+
+    public function storageHistories(){
+        return $this->hasMany(Storage_history::class);
+    }
+
+    public function storageRackPallets(){
+        return $this->hasMany(StorageRackPallet::class);
     }
 }

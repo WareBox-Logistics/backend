@@ -24,7 +24,7 @@ class Company extends Model
     }
 
     public function users() {
-        return $this->hasMany(User::class);
+        return $this->hasMany(UserBox::class); //User -> UserBox
     }
 
     public function categories() {
@@ -39,4 +39,13 @@ class Company extends Model
     {
         return $this->hasMany(Pallet::class, 'company');
     }
+
+    public function deliveries(){
+        return $this->hasMany(Delivery::class);
+    }
+
+    public function products(){
+        return $this->hasMany(Product::class);
+    }
+
 }

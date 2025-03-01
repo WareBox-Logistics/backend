@@ -39,4 +39,13 @@ class Pallet extends Model
     {
         return $this->hasMany(StorageRackPallet::class, 'pallet');
     }
+
+    public function deliveryDetail(){
+        return $this->hasMany(DeliveryDetail::class);
+    }
+
+    public function storageHistories(){
+        return $this->hasMany(Storage_history::class);
+    }
+
 }

@@ -19,4 +19,16 @@ class Storage_history extends Model
         'stored_at',
         'removed_at'
     ];
+
+    public function pallet(){
+        return $this->belongsTo(Pallet::class);
+    }
+
+    public function rack(){
+        return $this->belongsTo(Rack::class);
+    }
+
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
+    }
 }
