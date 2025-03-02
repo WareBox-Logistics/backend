@@ -63,7 +63,8 @@ class BoxInventoryController extends Controller
               'weight' => 'required|numeric|min:0.01',
               'volume' => 'required|numeric|min:0.01',
               'pallet' => 'required|exists:pallet,id',
-              'inventory' => 'required|exists:inventory,id',
+              'product' => 'required|exists:product,id',
+              
           ]);
   
           return response() -> json(["data"=>BoxInventory::create($validatedData)]);
