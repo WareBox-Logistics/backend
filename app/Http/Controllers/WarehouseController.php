@@ -12,6 +12,8 @@ class WarehouseController extends Controller
         try{
             $warehouses =  Warehouse::all();
 
+            
+
             return response()->json([
                 'warehouses'=>$warehouses
             ]);
@@ -27,9 +29,9 @@ class WarehouseController extends Controller
         try{
             $warehouse =  Warehouse::findOrFail($id);
 
-            return response()->json([
-                'warehouse'=>$warehouse
-            ]);
+            return response()->json(
+                $warehouse
+            );
         }catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching warehouses',

@@ -2,14 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
     public function index() {
         try{
             $products =  Product::all();
+
+            //get the company and category
+            foreach($products as $product){
+                $company = Company::where('id',$product->company)->first();
+                $product->company = $company;
+
+                //get the category
+                $category = Category::where('id',$product->category)->first();
+                $product->category = $category;
+            }
 
             return response()->json([
                 'products'=>$products
@@ -26,9 +38,17 @@ class ProductController extends Controller
         try{
             $product =  Product::findOrFail($id);
 
-            return response()->json([
-                'product'=>$product
-            ]);
+            //get the company
+            $company = Company::where('id',$product->company)->first();
+            $product->company = $company;
+
+            //get category
+            $category = Category::where('id',$product->category)->first();
+            $product->category = $category;
+
+            return response()->json(
+                $product
+            );
         }catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching product',
@@ -47,7 +67,6 @@ class ProductController extends Controller
                 'category' => 'required',
                 'sku'=>'required',
                 'image' => 'required',
-                'category' => 'required',
                 'company' => 'required'
             ]);
 
@@ -60,6 +79,30 @@ class ProductController extends Controller
         }catch(\Exception $e){
             return response()->json([
                 'error'=>'Error creating a product',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function findProductWithSku($sku){
+        try{
+
+            $product = Product::where('sku',$sku)->first();
+
+            if(!$product){
+                return response()->json([
+                    'error'=>'Product not found'
+                ]);
+            }
+
+
+            return response()->json([
+                'product'=>$product
+            ]);
+
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'Error fetching product with sku',
                 'message'=>$e->getMessage()
             ]);
         }

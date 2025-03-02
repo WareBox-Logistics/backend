@@ -4,12 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use Illuminate\Http\Request;
+use App\Models\Service;
 
 class CompanyController extends Controller
 {
     public function index() {
         try{
             $companies =  Company::all();
+
+            //get the service
+            foreach($companies as $company){
+                $service = Service::where('id',$company->service)->first();
+                $company->service = $service;
+            }
 
             return response()->json([
                 'companies'=>$companies
@@ -26,9 +33,13 @@ class CompanyController extends Controller
         try{
             $company =  Company::findOrFail($id);
 
-            return response()->json([
-                'company'=>$company
-            ]);
+            //get the service
+            $service = Service::where('id',$company->service)->first();
+            $company->service = $service;
+
+            return response()->json(
+                $company
+            );
         }catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching company',

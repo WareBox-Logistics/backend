@@ -4,13 +4,28 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pallet;
+use App\Models\Company;
+use App\Models\Warehouse;
 
 class PalletController extends Controller
 {
      public function index()
      {
          try{
-            return response()->json(["data"=>Pallet::all()]);
+
+            $pallets = Pallet::all();
+
+            //get the company and warehouse
+            foreach($pallets as $pallet){
+                $company = Company::where('id',$pallet->company)->first();
+                $pallet->company = $company;
+
+                //get the warehouse
+                $warehouse = Warehouse::where('id',$pallet->warehouse)->first();
+                $pallet->warehouse = $warehouse;
+            }
+
+            return response()->json(["pallets"=>$pallets]);
         }catch(\Exception $e){
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -19,7 +34,20 @@ class PalletController extends Controller
      public function find($id)
      {
          try{
-            return response()->json(["data"=>Pallet::find($id)]);
+
+            $pallet = Pallet::find($id);
+
+            //get the company
+            $company = Company::where('id',$pallet->company)->first();
+            $pallet->company = $company;
+
+            //get the warehouse
+            $warehouse = Warehouse::where('id',$pallet->warehouse)->first();
+            $pallet->warehouse = $warehouse;
+
+            return response()->json(
+                $pallet
+            );
         }catch(\Exception $e){
             return response()->json(['message' => $e->getMessage()], 500); 
         }
