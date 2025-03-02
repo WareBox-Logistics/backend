@@ -7,8 +7,7 @@ use App\Http\Controllers\DeliveryDetailController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\RouteController;
-use App\Http\Controllers\RoutesDeliveryController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TrailerController;
 use App\Http\Controllers\TruckController;
@@ -23,6 +22,7 @@ use App\Http\Controllers\RackController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StorageRackPalletController;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\ProductController;
 
 //E N D P O I N T S
 
@@ -43,10 +43,6 @@ Route::apiResource('delivery-detail',DeliveryDetailController::class)->middlewar
 Route::apiResource('employee',EmployeeController::class)->middleware('auth:sanctum');
 //Location
 Route::apiResource('location',LocationController::class)->middleware('auth:sanctum');
-//Route
-Route::apiResource('route',RouteController::class)->middleware('auth:sanctum');
-//Routes Delivery
-Route::apiResource('routes-delivery',RoutesDeliveryController::class)->middleware('auth:sanctum');
 //Service
 Route::apiResource('service',ServiceController::class)->middleware('auth:sanctum');
 //Trailer
@@ -69,6 +65,10 @@ Route::apiResource('report', ReportController::class);
 Route::apiResource('issue', IssueController::class);
 Route::apiResource('suppoert', SupportController::class);
 
+//Caregory
+Route::apiResource('category', CategoryController::class)->middleware('auth:sanctum');
+//Product
+Route::apiResource('product', ProductController::class)->middleware('auth:sanctum');
 
 
 

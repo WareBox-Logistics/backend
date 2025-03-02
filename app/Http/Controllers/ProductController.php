@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Location;
 use Illuminate\Http\Request;
+use App\Models\Product;
 
-class LocationController extends Controller
+class ProductController extends Controller
 {
     public function index() {
         try{
-            $locations =  Location::all();
+            $products =  Product::all();
 
             return response()->json([
-                'locations'=>$locations
+                'products'=>$products
             ]);
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'error fetching locations',
+                'error'=>'error fetching products',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -24,14 +24,14 @@ class LocationController extends Controller
 
     public function show($id) {
         try{
-            $location =  Location::findOrFail($id);
+            $product =  Product::findOrFail($id);
 
             return response()->json([
-                'location'=>$location
+                'product'=>$product
             ]);
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'error fetching location',
+                'error'=>'error fetching product',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -42,27 +42,26 @@ class LocationController extends Controller
 
             $fields = $request->validate([
                 'name'=>'required|max:50',
-                'latitude'=>'required|max:100',
-                'longitude'=>'required|max:100',
-                'is_warehouse'=>'required|boolean',
-                'company' => ''
+                'description'=>'required|max:100',
+                'price'=>'required',
+                'category' => 'required',
+                'sku'=>'required',
+                'image' => 'required',
+                'category' => 'required',
+                'company' => 'required'
             ]);
 
-            $location = Location::create($fields);
+            $product = Product::create($fields);
 
             return response()->json([
-                'location'=>$location
+                'product'=>$product
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a location',
+                'error'=>'Error creating a product',
                 'message'=>$e->getMessage()
             ]);
         }
     }
-
-    //upd
-
-    //delete
 }

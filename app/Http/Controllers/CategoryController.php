@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Location;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
-class LocationController extends Controller
+class CategoryController extends Controller
 {
     public function index() {
         try{
-            $locations =  Location::all();
+            $locations =  Category::all();
 
             return response()->json([
-                'locations'=>$locations
+                'categories'=>$locations
             ]);
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'error fetching locations',
+                'error'=>'error fetching Categories',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -24,14 +24,14 @@ class LocationController extends Controller
 
     public function show($id) {
         try{
-            $location =  Location::findOrFail($id);
+            $location =  Category::findOrFail($id);
 
             return response()->json([
-                'location'=>$location
+                'category'=>$location
             ]);
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'error fetching location',
+                'error'=>'error fetching category',
                 'message'=>$e->getMessage()
             ]);
         }
@@ -42,27 +42,21 @@ class LocationController extends Controller
 
             $fields = $request->validate([
                 'name'=>'required|max:50',
-                'latitude'=>'required|max:100',
-                'longitude'=>'required|max:100',
-                'is_warehouse'=>'required|boolean',
-                'company' => ''
+                'description'=>'required|max:100',
+                'company' => 'required'
             ]);
 
-            $location = Location::create($fields);
+            $location = Category::create($fields);
 
             return response()->json([
-                'location'=>$location
+                'category'=>$location
             ],200);
 
         }catch(\Exception $e){
             return response()->json([
-                'error'=>'Error creating a location',
+                'error'=>'Error creating a category',
                 'message'=>$e->getMessage()
             ]);
         }
     }
-
-    //upd
-
-    //delete
 }
