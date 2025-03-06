@@ -44,7 +44,7 @@ class LocationController extends Controller
                 'name'=>'required|max:50',
                 'latitude'=>'required|max:100',
                 'longitude'=>'required|max:100',
-                'is_warehouse'=>'required|boolean',
+                'is_warehouse'=>'required|boolean', //delete this, its not needed
                 'company' => ''
             ]);
 

@@ -107,4 +107,27 @@ class ProductController extends Controller
             ]);
         }
     }
+
+    public function getAllProductsByCompany($company){
+        try{
+            $products = Product::where('company',$company)->get();
+
+            if(!$products){
+                return response()->json([
+                    'error'=>'No products found for company'
+                ]);
+            }
+
+            return response()->json([
+                'products'=>$products
+            ]);
+
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'Error fetching products by company',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
 }

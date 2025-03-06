@@ -45,8 +45,8 @@ class WarehouseController extends Controller
 
             $fields = $request->validate([
                 'name'=>'required|max:50',
-                'altitude'=>'required|max:100',
-                'latitude'=>'required|max:100'
+                'latitude'=>'required|max:100',
+                'longitude'=>'required|max:100'
             ]);
 
             $warehouse = Warehouse::create($fields);

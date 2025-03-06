@@ -63,12 +63,14 @@ Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->m
 //Dispatch
 Route::apiResource('report', ReportController::class);
 Route::apiResource('issue', IssueController::class);
-Route::apiResource('suppoert', SupportController::class);
+Route::apiResource('support', SupportController::class);
 
 //Caregory
 Route::apiResource('category', CategoryController::class)->middleware('auth:sanctum');
 //Product
 Route::apiResource('product', ProductController::class)->middleware('auth:sanctum');
+Route::get('product/company/{company}', [ProductController::class, 'getAllProductsByCompany'])->middleware('auth:sanctum');
+
 
 
 
