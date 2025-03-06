@@ -32,10 +32,11 @@ class ReportController extends Controller
     public function store(Request $request){
         try{
             $validatedData = $request->validate([
-                'route' => 'required|exists:route,id',
                 'ubication' => 'required|string',
+                'problem' => 'required|exists:problem,id',
                 'issue' => 'required|boolean',
                 'description' => 'required|string',
+                'driver' => 'required|exists:employee,id'
             ]);
             return response()->json([
                 'data' => Report::create($validatedData)

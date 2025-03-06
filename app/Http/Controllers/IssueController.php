@@ -38,7 +38,12 @@ class IssueController extends Controller
                 'status' => 'required|string|in:WIP,DONE,WAIT',
                 'description' => 'required|string',
                 'report' => 'required|exists:report,id',
+                'operator' => 'required|esists:employee,id',
                 'support' => 'required|boolean',
+            ]);
+
+            return response()->json([
+                'data' => Issue::create($validatedData)
             ]);
         }catch(Exception $e){
             return response()->json($e);
