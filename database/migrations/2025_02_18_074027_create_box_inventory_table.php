@@ -17,13 +17,10 @@ return new class extends Migration
             $table->unsignedBigInteger('inventory_product');
             $table->integer('qty')->check('qty > 0');
             $table->decimal('weight')->check('weight > 0');
-            $table->decimal('height')->check('weight > 0');
-            $table->decimal('width')->check('weight > 0');
-            $table->decimal('depth')->check('weight > 0');
             $table->decimal('volume')->check('volume > 0');
             $table->timestamps();
 
-            $table->foreign('pallet')->references('id')->on('pallet')->onUpdate('NO ACTION')->onDelete('CASCADE');;
+            $table->foreign('pallet')->references('id')->on('pallet')->onUpdate('NO ACTION')->onDelete('CASCADE');
             $table->foreign('inventory_product')->references('id')->on('inventory')->onUpdate('NO ACTION')->onDelete('CASCADE');
         });
     }

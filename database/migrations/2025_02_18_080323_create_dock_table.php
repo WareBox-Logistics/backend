@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('dock', function (Blueprint $table) {
             $table->id();
+            $table->char('name',2);
             $table->string('status', 50)->check("status IN ('Available', 'Occupied', 'Maintenance')");
             $table->string('type', 50)->check("type IN ('Loading', 'Unloading')");
             $table->unsignedBigInteger('warehouse');

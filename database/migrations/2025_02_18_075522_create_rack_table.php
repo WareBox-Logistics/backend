@@ -15,9 +15,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('warehouse');
             $table->string('section', 255);
-            $table->decimal('height')->check('weight > 0');
-            $table->decimal('width')->check('weight > 0');
-            $table->decimal('depth')->check('weight > 0');
             $table->string('status', 50)->check("status IN ('Available', 'Full')");
             $table->decimal('capacity_volume')->check('capacity_volume > 0');
             $table->decimal('used_volume')->check('used_volume <= capacity_volume');

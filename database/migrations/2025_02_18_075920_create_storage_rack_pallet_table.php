@@ -14,18 +14,19 @@ return new class extends Migration
         Schema::create('storage_rack_pallet', function (Blueprint $table) {
             $table->unsignedBigInteger('pallet');
             $table->unsignedBigInteger('rack');
-            $table->unsignedBigInteger('warehouse');
-            $table->string('position', 4);
-            $table->integer('level');
-            $table->timestamp('stored_at')->nullable();
-            $table->string('status', 50)->check("status IN ('Stored', 'Removed')");
-            $table->timestamps();
 
-            $table->primary(['pallet', 'rack']);
+            $table->char('position', 2);
+            $table->unsignedInteger('level');
+
+            $table->timestamp('stored_at')->nullable();
+            $table->string('status', 50)->check("status IN ('Occupied', 'Available')");
+            $table->timestamps();
 
             $table->foreign('pallet')->references('id')->on('pallet')->onUpdate('NO ACTION')->onDelete('CASCADE');
             $table->foreign('rack')->references('id')->on('rack')->onUpdate('NO ACTION')->onDelete('CASCADE');
-            $table->foreign('warehouse')->references('id')->on('warehouse');
+
+            $table->primary(['pallet', 'rack']);
+            $table->unique(['rack','position','level']);
         });
     }
 
