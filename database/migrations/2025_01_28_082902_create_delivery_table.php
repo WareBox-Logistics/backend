@@ -24,8 +24,8 @@ return new class extends Migration
             $table->dateTime('finished_date')->nullable();
             $table->timestamps();
 
-            $table->foreign('truck')->references('id')->on('truck');
-            $table->foreign('trailer')->references('id')->on('trailer');
+            $table->foreign('truck')->references('id')->on('vehicle');
+            $table->foreign('trailer')->references('id')->on('vehicle');
             $table->foreign('company')->references('id')->on('company');
             $table->foreign('origin')->references('id')->on('location');
             $table->foreign('destination')->references('id')->on('location');

@@ -43,4 +43,7 @@ class Warehouse extends Model
     public function storageRackPallets(){
         return $this->hasMany(StorageRackPallet::class);
     }
+    public function employees(){
+        return $this->hasMany(Employee::class);
+    }
 }

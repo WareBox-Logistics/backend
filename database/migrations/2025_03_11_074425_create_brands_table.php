@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trailer', function (Blueprint $table) {
+        Schema::create('brands', function (Blueprint $table) {
             $table->id();
-            $table->string('plates')->unique();
-            $table->string('vin')->unique();
-            $table->decimal('volume', 10, 2);
-            $table->enum('brand', ['Great Dane', 'Utility', 'Wabash', 'Hyundai Translead', 'Stoughton', 'Vanguard', 'Manac', 'Fontaine', 'Reitnouer', 'MAC Trailer']);
+            $table->name();
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trailer');
+        Schema::dropIfExists('brands');
     }
 };

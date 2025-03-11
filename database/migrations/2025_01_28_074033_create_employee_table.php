@@ -18,9 +18,11 @@ return new class extends Migration
             $table->string('email');
             $table->string('password');
             $table->unsignedBigInteger('role');
+            $table->unsignedBigInteger('warehouse');
             $table->timestamps();
 
             $table->foreign('role')->references('id')->on('role');
+            $table->foreign('warehouse')->references('id')->on('warehouse');
         });
     }
 
