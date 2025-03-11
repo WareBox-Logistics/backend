@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoxInventory;
 use Illuminate\Http\Request;
 use App\Models\Pallet;
 use App\Models\Company;
+use App\Models\Product;
 use App\Models\Warehouse;
 
 class PalletController extends Controller
@@ -31,27 +33,41 @@ class PalletController extends Controller
         }
      }
  
-     public function find($id)
-     {
-         try{
+public function show($id)
+{
+    try {
+        $pallet = Pallet::find($id);
 
-            $pallet = Pallet::find($id);
-
-            //get the company
-            $company = Company::where('id',$pallet->company)->first();
-            $pallet->company = $company;
-
-            //get the warehouse
-            $warehouse = Warehouse::where('id',$pallet->warehouse)->first();
-            $pallet->warehouse = $warehouse;
-
-            return response()->json(
-                $pallet
-            );
-        }catch(\Exception $e){
-            return response()->json(['message' => $e->getMessage()], 500); 
+        if (!$pallet) {
+            return response()->json(['message' => 'Pallet not found'], 404);
         }
-     }
+
+        // Get the company name
+        $company = Company::where('id', $pallet->company)->first();
+        $pallet->company = $company ? $company->name : null;
+
+        // Get the warehouse name
+        $warehouse = Warehouse::where('id', $pallet->warehouse)->first();
+        $pallet->warehouse = $warehouse ? $warehouse->name : null;
+
+        // Get every box in the pallet
+        $boxes = BoxInventory::where('pallet', $pallet->id)->get();
+
+        // Get the name of the product for each box
+        foreach ($boxes as $box) {
+            $product = Product::where('id', $box->product)->first();
+            $box->product = $product ? $product->name : null;
+        }
+
+        $pallet->boxes = $boxes;
+
+        // Return the response
+        return response()->json($pallet);
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+    }
+}
+
  
      public function store(Request $request)
      {
