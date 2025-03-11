@@ -78,9 +78,10 @@ public function show($id)
              'weight' => 'required|numeric|min:0.01',
              'volume' => 'required|numeric|min:0.01',
              'status' => 'required|string|in:Created,Stored,In Transit,Delivered',
+             'verified' => 'required|boolean',
          ]);
  
-         return response() -> json(["data"=>Pallet::create($validatedData)]);
+         return response() -> json(Pallet::create($validatedData), 201);
 
         }catch(\Exception $e){
             return response()->json(['message' => $e->getMessage()], 500);

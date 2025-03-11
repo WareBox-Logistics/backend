@@ -118,9 +118,9 @@ class ProductController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'products'=>$products
-            ]);
+            return response()->json(
+                $products
+            );
 
         }catch(\Exception $e){
             return response()->json([
