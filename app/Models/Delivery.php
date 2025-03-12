@@ -48,4 +48,9 @@ class Delivery extends Model
         return $this->hasMany(DeliveryDetail::class);
     }
 
+    public function parkingAssigments(){
+        return $this->hasMany(ParkingAssigment::class);
+    }
+
+
 }

@@ -45,7 +45,7 @@ return new class extends Migration
         $$ LANGUAGE plpgsql;
 
         CREATE TRIGGER validate_level_before_insert
-        BEFORE INSERT OR UPDATE ON storage_rack_pallets
+        BEFORE INSERT OR UPDATE ON storage_rack_pallet
         FOR EACH ROW
         EXECUTE FUNCTION check_level_validity();
     ");

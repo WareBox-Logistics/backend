@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('driver');
             $table->timestamps();
 
-            $table->foreign('models')->references('id')->on('models');
+            $table->foreign('model')->references('id')->on('modell');
             $table->foreign('driver')->references('id')->on('employee');
         });
     }

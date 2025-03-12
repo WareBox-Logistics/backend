@@ -46,4 +46,8 @@ class Warehouse extends Model
     public function employees(){
         return $this->hasMany(Employee::class);
     }
+
+    public function parkingLots(){
+        return $this->hasMany(ParkingLot::class);
+    }
 }
