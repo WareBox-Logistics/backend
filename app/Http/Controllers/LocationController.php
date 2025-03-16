@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Location;
 use Illuminate\Http\Request;
+use App\Models\Company;
 
 class LocationController extends Controller
 {
@@ -11,9 +12,15 @@ class LocationController extends Controller
         try{
             $locations =  Location::all();
 
+            $locations->map(function($location){
+                $company = Company::where('id',$location->company)->first()->name;
+                $location->company = $company;
+            });
+
             return response()->json([
                 'locations'=>$locations
             ]);
+        
         }catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching locations',
