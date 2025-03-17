@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dock', function (Blueprint $table) {
+        Schema::create('employee', function (Blueprint $table) {
             $table->id();
-            $table->char('name',2);
-            $table->string('status', 50)->check("status IN ('Available', 'Occupied', 'Maintenance')");
-            $table->string('type', 50)->check("type IN ('Loading', 'Unloading')");
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->string('email');
+            $table->string('password');
+            $table->unsignedBigInteger('role');
             $table->unsignedBigInteger('warehouse');
             $table->timestamps();
 
-            $table->foreign('warehouse')->references('id')->on('warehouse')->cascadeOnDelete();
+            $table->foreign('role')->references('id')->on('role');
+            $table->foreign('warehouse')->references('id')->on('warehouse');
         });
     }
 
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dock');
+        Schema::dropIfExists('employee');
     }
 };

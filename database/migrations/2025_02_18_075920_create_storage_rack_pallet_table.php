@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -14,19 +15,41 @@ return new class extends Migration
         Schema::create('storage_rack_pallet', function (Blueprint $table) {
             $table->unsignedBigInteger('pallet');
             $table->unsignedBigInteger('rack');
-            $table->unsignedBigInteger('warehouse');
-            $table->string('position', 4);
-            $table->integer('level');
-            $table->timestamp('stored_at')->nullable();
-            $table->string('status', 50)->check("status IN ('Stored', 'Removed')");
-            $table->timestamps();
 
-            $table->primary(['pallet', 'rack']);
+            $table->char('position', 2);
+            $table->unsignedInteger('level');
+
+            $table->timestamp('stored_at')->nullable();
+            $table->string('status', 50)->check("status IN ('Occupied', 'Available')");
+            $table->timestamps();
 
             $table->foreign('pallet')->references('id')->on('pallet')->onUpdate('NO ACTION')->onDelete('CASCADE');
             $table->foreign('rack')->references('id')->on('rack')->onUpdate('NO ACTION')->onDelete('CASCADE');
-            $table->foreign('warehouse')->references('id')->on('warehouse');
+
+            $table->primary(['pallet', 'rack']);
+            $table->unique(['rack','position','level']);
         });
+
+        DB::unprepared("
+        CREATE OR REPLACE FUNCTION check_level_validity()
+        RETURNS TRIGGER AS $$
+        DECLARE
+            max_level INTEGER;
+        BEGIN
+            SELECT levels INTO max_level FROM rack WHERE id = NEW.rack_id;
+            IF NEW.level > max_level THEN
+                RAISE EXCEPTION 'Nivel % es mayor que el máximo permitido % para el rack %', NEW.level, max_level, NEW.rack_id;
+            END IF;
+            RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
+        CREATE TRIGGER validate_level_before_insert
+        BEFORE INSERT OR UPDATE ON storage_rack_pallet
+        FOR EACH ROW
+        EXECUTE FUNCTION check_level_validity();
+    ");
+
     }
 
     /**

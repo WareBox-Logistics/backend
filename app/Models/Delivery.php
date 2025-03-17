@@ -24,11 +24,11 @@ class Delivery extends Model
     ];
 
     public function truck() {
-        return $this->belongsTo(Truck::class);
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function trailer() {
-        return $this->belongsTo(Trailer::class);
+        return $this->belongsTo(Vehicle::class);
     }
 
     public function company() {
@@ -47,5 +47,10 @@ class Delivery extends Model
     public function deliveryDetail(){
         return $this->hasMany(DeliveryDetail::class);
     }
+
+    public function parkingAssigments(){
+        return $this->hasMany(ParkingAssigment::class);
+    }
+
 
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('truck');
             $table->unsignedBigInteger('trailer');
             $table->unsignedBigInteger('company');
-            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('created_by'); //no estoy seguro de esto kick
             $table->enum('status', ['Pending','Docking','Loading','Delivering','Emptying']);
             $table->unsignedBigInteger('origin');
             $table->unsignedBigInteger('destination');
@@ -24,8 +24,8 @@ return new class extends Migration
             $table->dateTime('finished_date')->nullable();
             $table->timestamps();
 
-            $table->foreign('truck')->references('id')->on('truck');
-            $table->foreign('trailer')->references('id')->on('trailer');
+            $table->foreign('truck')->references('id')->on('vehicles');
+            $table->foreign('trailer')->references('id')->on('vehicles');
             $table->foreign('company')->references('id')->on('company');
             $table->foreign('origin')->references('id')->on('location');
             $table->foreign('destination')->references('id')->on('location');

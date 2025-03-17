@@ -17,7 +17,8 @@ class Employee extends Authenticatable
         'last_name',
         'email',
         'password',
-        'role'
+        'role',
+        'warehouse'
     ];
 
     protected $hidden = [
@@ -50,5 +51,8 @@ class Employee extends Authenticatable
     }
     public function supports(){
         return $this->hasMany(Support::class);
+    }
+    public function warehouse(){
+        return $this->belongsTo(Warehouse::class);
     }
 }

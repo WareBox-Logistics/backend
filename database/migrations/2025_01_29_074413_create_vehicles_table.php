@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('truck', function (Blueprint $table) {
+        Schema::create('vehicles', function (Blueprint $table) {
             $table->id();
             $table->string('plates')->unique();
             $table->string('vin')->unique();
-            $table->enum('brand', ['Freightliner', 'Kenworth', 'Peterbilt', 'Volvo', 'Mack', 'International', 'Western Star', 'Sterling', 'Hino', 'Isuzu']);
-            $table->enum('model', ['Cascadia', 'T680', '579', 'VNL', 'Anthem', 'LT', '4900', 'Acterra', '338', 'N-Series']);
+            $table->unsignedBigInteger('model');
+            $table->decimal('volume', 10, 2)->nullable();
             $table->unsignedBigInteger('driver');
             $table->timestamps();
 
+            $table->foreign('model')->references('id')->on('modell');
             $table->foreign('driver')->references('id')->on('employee');
         });
     }
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('truck');
+        Schema::dropIfExists('vehicles');
     }
 };

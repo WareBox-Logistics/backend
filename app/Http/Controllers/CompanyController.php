@@ -40,7 +40,8 @@ class CompanyController extends Controller
             return response()->json(
                 $company
             );
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching company',
                 'message'=>$e->getMessage()
@@ -65,7 +66,8 @@ class CompanyController extends Controller
                 'company'=>$company
             ],200);
 
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json([
                 'error'=>'Error creating a company',
                 'message'=>$e->getMessage()
@@ -73,7 +75,48 @@ class CompanyController extends Controller
         }
     }
 
-    //upd
+    public function update(Request $request, $id){
+        try{
+            $company = Company::findOrFail($id);
 
-    //delete
+            $fields = $request->validate([
+                'name'=>'required|max:50',
+                'rfc'=>'required|max:13|unique:company,rfc,' . $company->id,
+                'email'=>'required|email',
+                'phone'=>'required|max:10',
+                'service'=>'required'
+            ]);
+
+            $company->update($fields);
+
+            return response()->json([
+                'company'=>$company
+            ],200);
+
+        }
+        catch(\Exception $e){
+            return response()->json([
+                'error'=>'Error updating a company',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
+
+    public function destroy($id){
+        try{
+            $company = Company::findOrFail($id);
+            $company->delete();
+
+            return response()->json([
+                'company'=>$company
+            ],200);
+
+        }
+        catch(\Exception $e){
+            return response()->json([
+                'error'=>'Error deleting a company',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
 }
