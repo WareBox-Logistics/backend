@@ -51,8 +51,10 @@ class LocationController extends Controller
                 'name'=>'required|max:50',
                 'latitude'=>'required|max:100',
                 'longitude'=>'required|max:100',
-                'is_warehouse'=>'required|boolean', //delete this, its not needed
-                'company' => ''
+                'company' => '',
+                'id_routing_net'=>'required|max:100',
+                'source'=>'required|max:100',
+                'target'=>'required|max:100'
             ]);
 
             $location = Location::create($fields);

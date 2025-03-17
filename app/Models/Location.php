@@ -15,8 +15,10 @@ class Location extends Model
         'name',
         'latitude',
         'longitude',
-        'is_warehouse',
-        'company'
+        'company',
+        'id_routing_net',
+        'source',
+        'target'
     ];
 
     public function company() {

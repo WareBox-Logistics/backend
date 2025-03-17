@@ -14,7 +14,10 @@ class Warehouse extends Model
     protected $fillable = [
         'name',
         'latitude',
-        'longitude'
+        'longitude',
+        'id_routing_net',
+        'source',
+        'target'
     ];
 
     public function inventories() {
