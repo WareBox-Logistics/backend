@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('parking_lots', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('warehouse');
+            $table->unsignedBigInteger('warehouse_id');
             $table->integer('capacity');
             $table->timestamps();
 
-            $table->foreign('warehouse')->references('id')->on('warehouse');
+            $table->foreign('warehouse_id')->references('id')->on('warehouse')->onDelete('cascade'); // Added onDelete('cascade')
         });
     }
 

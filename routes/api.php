@@ -23,6 +23,9 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StorageRackPalletController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ModellController;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -55,6 +58,12 @@ Route::apiResource('trailer',TrailerController::class)->middleware('auth:sanctum
 Route::apiResource('truck',TruckController::class)->middleware('auth:sanctum');
 //warehouse
 Route::apiResource('warehouse',WarehouseController::class)->middleware('auth:sanctum');
+//vehicle
+Route::apiResource('vehicle',VehicleController::class)->middleware('auth:sanctum');
+//Brand
+Route::apiResource('brand',BrandController::class)->middleware('auth:sanctum');
+//Model
+Route::apiResource('model',ModellController::class)->middleware('auth:sanctum');
 
 //Derian
 Route::apiResource('box-inventory', BoxInventoryController::class)->middleware('auth:sanctum');

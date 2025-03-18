@@ -9,14 +9,15 @@ class Vehicle extends Model
 {
     use HasFactory;
 
-    protected $table = 'vehicle';
+    protected $table = 'vehicles';
 
     protected $fillable = [
       'plates',
       'vin',
-      'model',
+      'model_id',
       'volume',
-      'driver'
+      'driver_id',
+        'type'
     ];
 
     public function modell(){
