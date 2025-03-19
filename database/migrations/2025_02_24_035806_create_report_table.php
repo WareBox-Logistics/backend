@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('report', function (Blueprint $table) {
             $table->id();
-            $table->string('ubication');
+            $table->string('latitude');
+            $table->string('longitude');
             $table->unsignedBigInteger('problem');
             $table->boolean('issue');
             $table->string('description');

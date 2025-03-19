@@ -12,7 +12,8 @@ class Report extends Model
     protected $table = 'report';
 
     protected $fillable = [
-       'ubication',
+       'latitude',
+       'longitude',
        'problem',
        'issue',
        'description',
