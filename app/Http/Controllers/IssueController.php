@@ -13,7 +13,7 @@ class IssueController extends Controller
         try{
             return response()->json(
                 [
-                    'data' => Pallet::all()
+                    'data' => Issue::all()
                 ]
             );
         }catch(Exception $e){

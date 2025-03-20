@@ -12,8 +12,10 @@ class Modell extends Model
     protected $table = 'modell';
 
     protected $fillable = [
-        'brand',
-        'truck',
+        'brand_id',
+        'is_truck',
+        'is_trailer',
+        'name',
         'year',
     ];
 

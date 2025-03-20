@@ -32,7 +32,8 @@ class ReportController extends Controller
     public function store(Request $request){
         try{
             $validatedData = $request->validate([
-                'ubication' => 'required|string',
+                'latitude' => 'required|string',
+                'longitude' => 'required|string',
                 'problem' => 'required|exists:problem,id',
                 'issue' => 'required|boolean',
                 'description' => 'required|string',
