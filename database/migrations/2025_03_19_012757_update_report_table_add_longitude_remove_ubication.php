@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::tabl('location', function (Blueprint $table){
+        Schema::table('report', function (Blueprint $table){
             $table->dropColumn('ubication');
             $table->string('latitude');
             $table->string('longitude');
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('location', function (Blueprint $table){
+        Schema::table('report', function (Blueprint $table){
             $table->dropColumn('latitude');
             $table->dropColumn('longitude');
             $table->string('ubication');
