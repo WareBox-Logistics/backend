@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('location', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('is_warehouse');
             $table->string('latitude');
             $table->string('longitude');
             $table->unsignedBigInteger('company');

@@ -11,7 +11,8 @@ class ReportController extends Controller
     public function index(){
         try{
             return response()->json([
-                'data'=>Report::all()
+                'data'=>Report::all(),
+                'info'=>'mesagelkdkldkdkdkdkdkdkdk'
             ]);
         }catch(Exception $e){
             return response()->json($e);
