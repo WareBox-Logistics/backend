@@ -14,14 +14,15 @@ class Rack extends Model
     protected $fillable = [
         'warehouse',
         'section',
-        'height',
-        'width',
-        'depth',
         'status',
         'capacity_volume',
         'used_volume',
         'capacity_weight',
         'used_weight',
+        'height',
+        'width',
+        'long',
+        'levels',
     ];
 
     public function warehouse()

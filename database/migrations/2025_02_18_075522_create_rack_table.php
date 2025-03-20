@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('status', 50)->check("status IN ('Available', 'Full')");
             $table->decimal('capacity_volume')->check('capacity_volume > 0');
             $table->decimal('used_volume')->check('used_volume <= capacity_volume');
-            $table->decimal('capacity_weight')->check('capacity_volume > 0');
-            $table->decimal('used_weight')->check('used_volume <= capacity_volume');            
+            $table->decimal('capacity_weight')->check('capacity_weight > 0');
+            $table->decimal('used_weight')->check('used_weight <= capacity_weight');            
             $table->timestamps();
 
             $table->foreign('warehouse')->references('id')->on('warehouse');
