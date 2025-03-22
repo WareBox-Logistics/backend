@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\BoxInventory;
+use App\Models\Company;
 use App\Models\Pallet;
 use App\Models\Inventory;
+use App\Models\Product;
+use App\Models\Warehouse;
 
 class BoxInventoryController extends Controller
 {
@@ -18,11 +21,7 @@ class BoxInventoryController extends Controller
             //get the pallet and inventory
             foreach($boxes as $box){
                 $pallet = Pallet::where('id',$box->pallet)->first();
-                $box->pallet = $pallet;
-
-                //get the inventory
-                $inventory = Inventory::where('id',$box->inventory)->first();
-                $box->inventory = $inventory;
+                $box->pallet = $pallet;              
             }
 
             return response()->json(["boxes"=>$boxes]);
@@ -31,7 +30,7 @@ class BoxInventoryController extends Controller
         }
       }
   
-      public function find($id)
+      public function show($id)
       {
         try{
           
@@ -41,9 +40,12 @@ class BoxInventoryController extends Controller
             $pallet = Pallet::where('id',$box->pallet)->first();
             $box->pallet = $pallet;
 
-            //get the inventory
-            $inventory = Inventory::where('id',$box->inventory)->first();
-            $box->inventory = $inventory;
+            $product = Product::where('id', $box->product)->first()->name;
+            $company = Company::where('id', $pallet->company)->first()->name;
+            $warehouse = Warehouse::where('id', $pallet->warehouse)->first()->name;
+            $box->product = $product;
+            $pallet->warehouse = $warehouse;
+            $pallet->company = $company;
 
             return response()->json(
                 $box

@@ -27,6 +27,6 @@ class DockAssignment extends Model
 
     public function truck()
     {
-        return $this->belongsTo(Truck::class, 'truck');
+        return $this->belongsTo(Vehicle::class, 'truck');
     }
 }
