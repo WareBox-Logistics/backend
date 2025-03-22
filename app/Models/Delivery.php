@@ -20,7 +20,7 @@ class Delivery extends Model
         'origin',
         'destination',
         'date_created',
-        'finished_date'
+        'route'
     ];
 
     public function truck() {
