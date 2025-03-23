@@ -23,6 +23,13 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StorageRackPalletController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\BrandController;
+use App\Http\Controllers\ModellController;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 //E N D P O I N T S
 
@@ -51,6 +58,12 @@ Route::apiResource('trailer',TrailerController::class)->middleware('auth:sanctum
 Route::apiResource('truck',TruckController::class)->middleware('auth:sanctum');
 //warehouse
 Route::apiResource('warehouse',WarehouseController::class)->middleware('auth:sanctum');
+//vehicle
+Route::apiResource('vehicle',VehicleController::class)->middleware('auth:sanctum');
+//Brand
+Route::apiResource('brand',BrandController::class)->middleware('auth:sanctum');
+//Model
+Route::apiResource('model',ModellController::class)->middleware('auth:sanctum');
 
 //Derian
 Route::apiResource('box-inventory', BoxInventoryController::class)->middleware('auth:sanctum');
@@ -71,14 +84,65 @@ Route::apiResource('category', CategoryController::class)->middleware('auth:sanc
 Route::apiResource('product', ProductController::class)->middleware('auth:sanctum');
 Route::get('product/company/{company}', [ProductController::class, 'getAllProductsByCompany'])->middleware('auth:sanctum');
 
+Route::post('/proxy/optima', function (Request $request) {
+    try {
+        $queryParams = http_build_query($request->all());
+        $response = Http::post("https://gaia.inegi.org.mx/sakbe_v3.1/optima?$queryParams");
 
+        // Return the response from the external API
+        return response()->json($response->json(), $response->status());
+    } catch (\Exception $e) {
+        // Log the error
+        Log::error('Error fetching data:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
 
+        return response()->json([
+            'error' => 'Error fetching data',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
 
+Route::post('/proxy/optima/details', function (Request $request) {
+    try {
+        $queryParams = http_build_query($request->all());
+        $response = Http::post("https://gaia.inegi.org.mx/sakbe_v3.1/detalle_o?$queryParams");
 
+        // Return the response from the external API
+        return response()->json($response->json(), $response->status());
+    } catch (\Exception $e) {
+        // Log the error
+        Log::error('Error fetching data:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
 
+        return response()->json([
+            'error' => 'Error fetching data',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
 
+Route::post('/proxy/coordsID', function (Request $request){
+    try {
+        $queryParams = http_build_query($request->all());
+        $response = Http::post("https://gaia.inegi.org.mx/sakbe_v3.1/buscalinea?$queryParams");
 
+        // Return the response from the external API
+        return response()->json($response->json(), $response->status());
+    } catch (\Exception $e) {
+        // Log the error
+        Log::error('Error fetching data:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
 
-
-
-
+        return response()->json([
+            'error' => 'Error fetching data',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});

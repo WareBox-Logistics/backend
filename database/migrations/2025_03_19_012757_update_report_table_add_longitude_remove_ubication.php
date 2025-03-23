@@ -11,16 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('location', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('is_warehouse');
+        Schema::table('report', function (Blueprint $table){
+            $table->dropColumn('ubication');
             $table->string('latitude');
             $table->string('longitude');
-            $table->unsignedBigInteger('company');
-            $table->timestamps();
-
-            $table->foreign('company')->references('id')->on('company');
         });
     }
 
@@ -29,6 +23,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('location');
+        Schema::table('report', function (Blueprint $table){
+            $table->dropColumn('latitude');
+            $table->dropColumn('longitude');
+            $table->string('ubication');
+        });
+        
     }
 };

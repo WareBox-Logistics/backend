@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('brands', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
+        Schema::table('warehouse', function (Blueprint $table) {
+            $table->string('id_routing_net')->nullable();
+            $table->string('source')->nullable();
+            $table->string('target')->nullable();
         });
     }
 
@@ -23,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('brands');
+        Schema::table('warehouse', function (Blueprint $table) {
+            //
+        });
     }
 };

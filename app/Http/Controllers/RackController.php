@@ -10,10 +10,15 @@ class RackController extends Controller
      public function index()
      {
          try{
-            return response()->json(["data"=>Rack::all()]);
-
+            $racks =  Rack::all();
+            return response()->json([
+                'data'=>$racks
+            ]);
         }catch(\Exception $e){
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json([
+                'error'=>'error fetching racks',
+                'message'=>$e->getMessage()
+            ]);
         }
      }
  
@@ -33,10 +38,15 @@ class RackController extends Controller
              $validatedData = $request->validate([
              'warehouse' => 'required|exists:warehouse,id',
              'section' => 'required|string|max:255',
-             'level' => 'required|integer',
+             'levels' => 'required|integer',
              'status' => 'required|string|in:Available,Full',
              'capacity_volume' => 'required|numeric|min:0.01',
-             'used_volume' => 'required|numeric|max:capacity_volume',
+             'used_volume' => 'required|numeric|lte:capacity_volume',
+             'capacity_weight' => 'required|numeric|min:0.01',
+             'used_weight' => 'required|numeric|lte:capacity_weight',
+             'height' => 'required|numeric|min:0.01',
+             'width' => 'required|numeric|min:0.01',
+             'long' => 'required|numeric|min:0.01',
          ]);
  
          return response() -> json(["data"=>Rack::create($validatedData)]);

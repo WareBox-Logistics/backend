@@ -11,7 +11,8 @@ class ReportController extends Controller
     public function index(){
         try{
             return response()->json([
-                'data'=>Report::all()
+                'data'=>Report::all(),
+                'info'=>'mesagelkdkldkdkdkdkdkdkdk'
             ]);
         }catch(Exception $e){
             return response()->json($e);
@@ -32,7 +33,8 @@ class ReportController extends Controller
     public function store(Request $request){
         try{
             $validatedData = $request->validate([
-                'ubication' => 'required|string',
+                'latitude' => 'required|string',
+                'longitude' => 'required|string',
                 'problem' => 'required|exists:problem,id',
                 'issue' => 'required|boolean',
                 'description' => 'required|string',

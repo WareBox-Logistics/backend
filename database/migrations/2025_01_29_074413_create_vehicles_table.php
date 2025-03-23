@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('plates')->unique();
             $table->string('vin')->unique();
-            $table->unsignedBigInteger('model');
+            $table->unsignedBigInteger('model_id');
             $table->decimal('volume', 10, 2)->nullable();
-            $table->unsignedBigInteger('driver');
+            $table->unsignedBigInteger('driver_id')->nullable();
+            $table->enum('type', ['semi_truck', 'trailer'])->default('semi_truck'); // Added a 'type' enum to distinguish between semi-trucks and trailers
             $table->timestamps();
 
-            $table->foreign('model')->references('id')->on('modell');
-            $table->foreign('driver')->references('id')->on('employee');
+            $table->foreign('model_id')->references('id')->on('modell')->onDelete('cascade'); 
+            $table->foreign('driver_id')->references('id')->on('employee')->onDelete('set null'); 
         });
     }
 

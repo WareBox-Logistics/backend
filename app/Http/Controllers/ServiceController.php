@@ -14,7 +14,8 @@ class ServiceController extends Controller
             return response()->json([
                 'services'=>$services
             ]);
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching services',
                 'message'=>$e->getMessage()
@@ -29,7 +30,8 @@ class ServiceController extends Controller
             return response()->json([
                 'service'=>$service
             ]);
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching service',
                 'message'=>$e->getMessage()
@@ -50,7 +52,8 @@ class ServiceController extends Controller
                 'service'=>$service
             ],200);
 
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json([
                 'error'=>'Error creating a service',
                 'message'=>$e->getMessage()
@@ -59,6 +62,45 @@ class ServiceController extends Controller
     }
 
     //upd
+    public function update(Request $request, $id){
+        try{
+            $service = Service::findOrFail($id);
+
+            $fields = $request->validate([
+                'type'=>'required|max:25',
+            ]);
+
+            $service->update($fields);
+
+            return response()->json([
+                'service'=>$service
+            ],200);
+
+        }catch(\Exception $e){
+            return response()->json([
+                'error'=>'Error updating a service',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
 
     //delete
+    public function destroy($id){
+        try{
+            $service = Service::findOrFail($id);
+
+            $service->delete();
+
+            return response()->json([
+                'service'=>$service
+            ],200);
+
+        }
+        catch(\Exception $e){
+            return response()->json([
+                'error'=>'Error deleting a service',
+                'message'=>$e->getMessage()
+            ]);
+        }
+    }
 }

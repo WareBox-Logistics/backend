@@ -47,6 +47,9 @@ class DeliveryController extends Controller
                 'created_by'=>'required',
                 'status'=>'required',
                 'date_created'=>'required',
+                'route'=>'required|json',
+                'origin'=>'required',
+                'destination'=>'required'
                 //finished_date? we initially hace this empty (null)
             ]);
 

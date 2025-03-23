@@ -39,7 +39,7 @@ class Employee extends Authenticatable
     }
 
     public function truck() {
-        return $this->hasOne(Truck::class, 'driver');
+        return $this->hasOne(Vehicle::class, 'driver');
     }
 
     public function deliveries(){
