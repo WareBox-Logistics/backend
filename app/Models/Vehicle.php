@@ -17,7 +17,8 @@ class Vehicle extends Model
       'model_id',
       'volume',
       'driver_id',
-        'type'
+        'type',
+        'is_available'
     ];
 
     public function modell(){

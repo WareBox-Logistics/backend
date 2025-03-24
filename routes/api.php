@@ -25,8 +25,9 @@ use App\Http\Controllers\SupportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\LotController;
 use App\Http\Controllers\ModellController;
-
+use App\Http\Controllers\ParkingLotController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -77,6 +78,16 @@ Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->m
 Route::apiResource('report', ReportController::class);
 Route::apiResource('issue', IssueController::class);
 Route::apiResource('support', SupportController::class);
+
+//Parking
+Route::apiResource('parking-lots', ParkingLotController::class)->middleware('auth:sanctum');
+Route::apiResource('lots', LotController::class)->middleware('auth:sanctum');
+Route::post('/generate-parking-lot', [LotController::class, 'generateParkingLot'])->middleware('auth:sanctum');
+Route::get('/get-parkinglot-with-lots', [LotController::class, 'ReturnParkingLotsWithLots'])->middleware('auth:sanctum');
+Route::get('/vehicles/available-trucks', [VehicleController::class, 'availableTrucks'])->middleware('auth:sanctum');
+Route::get('/vehicles/available-trailers', [VehicleController::class, 'availableTrailers'])->middleware('auth:sanctum');
+Route::post('/lots/assign-vehicle', [LotController::class, 'assignVehicleToLot'])->middleware('auth:sanctum');
+Route::post('/lots/free', [LotController::class, 'freeLot'])->middleware('auth:sanctum');
 
 //Caregory
 Route::apiResource('category', CategoryController::class)->middleware('auth:sanctum');

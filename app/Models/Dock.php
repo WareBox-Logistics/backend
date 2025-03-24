@@ -15,6 +15,7 @@ class Dock extends Model
         'status',
         'type',
         'warehouse',
+        'number'
     ];
 
     public function warehouse()

@@ -118,4 +118,52 @@ class VehicleController extends Controller
             ]);
         }
     }
+
+    public function availableTrucks()
+    {
+        try {
+            $trucks = Vehicle::where('type', 'semi_truck')
+                             ->where('is_available', true)
+                             ->get();
+
+            foreach ($trucks as $truck) {
+                $model = Modell::where('id', $truck->model_id)->first();
+                $truck->model = $model;
+            }
+
+            return response()->json([
+                'trucks' => $trucks,
+            ]);
+        } 
+        catch (\Exception $e) {
+            return response()->json([
+                'error' => 'error fetching available trucks',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function availableTrailers()
+    {
+        try {
+            $trailers = Vehicle::where('type', 'trailer')
+                               ->where('is_available', true)
+                               ->get();
+
+            foreach ($trailers as $trailer) {
+                $model = Modell::where('id', $trailer->model_id)->first();
+                $trailer->model = $model;
+            }
+
+            return response()->json([
+                'trailers' => $trailers,
+            ]);
+        } 
+        catch (\Exception $e) {
+            return response()->json([
+                'error' => 'error fetching available trailers',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 }
