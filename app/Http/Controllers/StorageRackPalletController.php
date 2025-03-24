@@ -34,8 +34,9 @@ class StorageRackPalletController extends Controller
             'pallet' => 'required|exists:pallet,id',
             'rack' => 'required|exists:rack,id',
             'position' => 'required|string|max:4',
+            'level' => 'required|integer',
             'stored_at' => 'nullable|date',
-            'status' => 'required|string|in:Stored,Removed',
+            'status' => 'required|string|in:Occupied,Available',
         ]);
 
         return response()->json(["data"=>StorageRackPallet::create($validatedData)]);

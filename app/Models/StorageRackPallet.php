@@ -18,7 +18,6 @@ class StorageRackPallet extends Model
     protected $fillable = [
         'pallet',
         'rack',
-        'warehouse',
         'position',
         'level',
         'stored_at',
