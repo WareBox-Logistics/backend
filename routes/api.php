@@ -74,6 +74,9 @@ Route::apiResource('dock',DockController::class)->middleware('auth:sanctum');
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 
+Route::put('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::class, 'update']);
+Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::class, 'destroy']);
+
 //Dispatch
 Route::apiResource('report', ReportController::class);
 Route::apiResource('issue', IssueController::class);
