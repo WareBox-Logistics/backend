@@ -49,6 +49,8 @@ Route::apiResource('delivery',DeliveryController::class)->middleware('auth:sanct
 Route::apiResource('delivery-detail',DeliveryDetailController::class)->middleware('auth:sanctum');
 //Employee
 Route::apiResource('employee',EmployeeController::class)->middleware('auth:sanctum');
+//Driver
+Route::get('driver', [EmployeeController::class, 'getDrivers'])->middleware('auth:sanctum');
 //Location
 Route::apiResource('location',LocationController::class)->middleware('auth:sanctum');
 //Service

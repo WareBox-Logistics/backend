@@ -57,7 +57,7 @@ class VehicleController extends Controller
                 'vin' => 'required|string|unique:vehicles|max:255',
                 'model_id' => 'required|exists:modell,id',
                 'volume' => 'nullable|numeric|min:0',
-                'driver_id' => 'nullable|exists:employees,id',
+                'driver_id' => 'nullable|exists:employee,id',
                 'type' => 'required|in:semi_truck,trailer',
             ]);
 
@@ -84,7 +84,7 @@ class VehicleController extends Controller
                 'vin' => 'required|string|unique:vehicles,vin,' . $vehicle->id . '|max:255',
                 'model_id' => 'required|exists:modell,id',
                 'volume' => 'nullable|numeric|min:0',
-                'driver_id' => 'nullable|exists:employees,id',
+                'driver_id' => 'nullable|exists:employee,id',
                 'type' => 'required|in:semi_truck,trailer',
             ]);
 
