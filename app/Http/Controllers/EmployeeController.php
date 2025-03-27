@@ -57,4 +57,21 @@ class EmployeeController extends Controller
             ]);
         }
     }
+
+    public function getClients() {
+        try {
+            
+            $clients = Employee::where('role', 7)->get();
+    
+            return response()->json([
+                'clients' => $clients
+            ]);
+        } 
+        catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error fetching clients',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 }
