@@ -25,8 +25,10 @@ use App\Http\Controllers\SupportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\LotController;
 use App\Http\Controllers\ModellController;
-
+use App\Http\Controllers\ParkingLotController;
+use App\Models\Delivery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -44,10 +46,13 @@ Route::apiResource('role',RoleController::class)->middleware('auth:sanctum');
 Route::apiResource('company',CompanyController::class)->middleware('auth:sanctum');
 //Delivery
 Route::apiResource('delivery',DeliveryController::class)->middleware('auth:sanctum');
+Route::post('delivery-driver', [DeliveryController::class, 'getDeliveriesBasedOnDriver'])->middleware('auth:sanctum');
 //Delivery Detail
 Route::apiResource('delivery-detail',DeliveryDetailController::class)->middleware('auth:sanctum');
 //Employee
 Route::apiResource('employee',EmployeeController::class)->middleware('auth:sanctum');
+//Driver
+Route::get('driver', [EmployeeController::class, 'getDrivers'])->middleware('auth:sanctum');
 //Location
 Route::apiResource('location',LocationController::class)->middleware('auth:sanctum');
 //Service
@@ -72,11 +77,27 @@ Route::apiResource('dock-assigmnet', DockAssignmentController::class)->middlewar
 Route::apiResource('dock',DockController::class)->middleware('auth:sanctum');
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
+//Pallets
+Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
+
+Route::put('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::class, 'update']);
+Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::class, 'destroy']);
 
 //Dispatch
 Route::apiResource('report', ReportController::class);
 Route::apiResource('issue', IssueController::class);
 Route::apiResource('support', SupportController::class);
+
+//Parking
+Route::post('/lots/vehicle/location', [LotController::class, 'findVehicleParkingLocation'])->middleware('auth:sanctum');
+Route::apiResource('parking-lots', ParkingLotController::class)->middleware('auth:sanctum');
+Route::apiResource('lots', LotController::class)->middleware('auth:sanctum');
+Route::post('/generate-parking-lot', [LotController::class, 'generateParkingLot'])->middleware('auth:sanctum');
+Route::get('/get-parkinglot-with-lots', [LotController::class, 'ReturnParkingLotsWithLots'])->middleware('auth:sanctum');
+Route::get('/vehicles/available-trucks', [VehicleController::class, 'availableTrucks'])->middleware('auth:sanctum');
+Route::get('/vehicles/available-trailers', [VehicleController::class, 'availableTrailers'])->middleware('auth:sanctum');
+Route::post('/lots/assign-vehicle', [LotController::class, 'assignVehicleToLot'])->middleware('auth:sanctum');
+Route::post('/lots/free', [LotController::class, 'freeLot'])->middleware('auth:sanctum');
 
 //Caregory
 Route::apiResource('category', CategoryController::class)->middleware('auth:sanctum');

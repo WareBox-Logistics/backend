@@ -10,7 +10,7 @@ class DockController extends Controller
     public function index()
     {
         try{
-            return response()-> json(["data"=>Dock::all()]);
+            return response()-> json(Dock::all());
         }catch(\Exception $e){
             return response()->json(['message' => $e->getMessage()], 500);
         }
@@ -19,7 +19,7 @@ class DockController extends Controller
     public function find($id)
     {
         try{
-        return response() -> json(["data"=>Dock::find($id)]);
+        return response() -> json(Dock::find($id));
         }catch(\Exception $e){
             return response()->json(['message' => $e->getMessage()], 500); 
         }
@@ -27,17 +27,32 @@ class DockController extends Controller
 
     public function store(Request $request)
     {
-        try{
+        try {
             $validatedData = $request->validate([
-            'status' => 'required|string|in:Available,Occupied,Maintenance',
-            'type' => 'required|string|in:Loading,Unloading',
-            'warehouse' => 'required|exists:warehouse,id',
-        ]);
-
-        return response() -> json(["data"=>Dock::create($validatedData)]);
-        
-        }catch(\Exception $e){
+                'status' => 'required|string|in:Available,Occupied,Maintenance',
+                'warehouse' => 'required|exists:warehouse,id',
+                'number' => 'required|integer|min:1' 
+            ]);
+    
+            $warehouseId = $validatedData['warehouse'];
+            $numberOfPorts = $validatedData['number'];
+    
+            $createdPorts = [];
+    
+            for ($i = 1; $i <= $numberOfPorts; $i++) {
+                $portData = [
+                    'status' => $validatedData['status'],
+                    'warehouse' => $warehouseId,
+                    'number' => $i 
+                ];
+    
+                $createdPorts[] = Dock::create($portData);
+            }
+    
+            return response()->json( $createdPorts, 201);
+    
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
-}
+    }
 }

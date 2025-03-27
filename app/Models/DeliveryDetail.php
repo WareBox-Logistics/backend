@@ -14,14 +14,15 @@ class DeliveryDetail extends Model
     protected $fillable =[
         'delivery',
         'pallet',
-        'qty'
     ];
 
-    public function delivery() {
-        return $this->belongsTo(Delivery::class);
+    public function delivery()
+    {
+        // Explicitly specify the foreign key column
+        return $this->belongsTo(Delivery::class, 'delivery');
     }
 
     public function pallet(){
-        return $this->belongsTo(Pallet::class);
+        return $this->belongsTo(Pallet::class, 'pallet');
     }
 }

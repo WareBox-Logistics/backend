@@ -24,8 +24,15 @@ class BoxInventoryController extends Controller
                 $box->pallet = $pallet;              
             }
 
+            //get the product
+            foreach($boxes as $box){
+                $product = Product::where('id',$box->product)->first();
+                $box->product = $product;
+            }
+
             return response()->json(["boxes"=>$boxes]);
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json(['message' => $e->getMessage()], 500);
         }
       }
@@ -66,7 +73,7 @@ class BoxInventoryController extends Controller
               'volume' => 'required|numeric|min:0.01',
               'pallet' => 'required|exists:pallet,id',
               'product' => 'required|exists:product,id',
-              
+      
           ]);
   
           return response() -> json(["data"=>BoxInventory::create($validatedData)]);

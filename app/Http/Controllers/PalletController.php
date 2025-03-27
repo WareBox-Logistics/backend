@@ -87,4 +87,30 @@ public function show($id)
             return response()->json(['message' => $e->getMessage()], 500);
         }
      }
+
+     public function PalletsFromWarehouse(Request $request)
+     {
+         try {
+             $validatedData = $request->validate([
+                 'warehouseID' => 'required|exists:warehouse,id',
+                 'companyID' => 'required|exists:company,id'
+             ]);
+     
+             $pallets = Pallet::with(['company', 'warehouse'])
+             ->where('warehouse', $validatedData['warehouseID'])
+             ->where('company', $validatedData['companyID'])
+             ->where('status', 'Stored')
+             ->get();
+     
+             if ($pallets->isEmpty()) {
+                return response()->json([
+                    'message' => 'No stored pallets found for this company in the specified warehouse'
+                ], 404);
+            }
+     
+             return response()->json(["pallets" => $pallets]);
+         } catch (\Exception $e) {
+             return response()->json(['message' => $e->getMessage()], 500);
+         }
+     }
 }
