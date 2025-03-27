@@ -28,6 +28,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\LotController;
 use App\Http\Controllers\ModellController;
 use App\Http\Controllers\ParkingLotController;
+use App\Http\Controllers\ProblemController;
 use App\Models\Delivery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -85,6 +86,7 @@ Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletControlle
 
 //Dispatch
 Route::apiResource('report', ReportController::class);
+Route::apiResource('problem', ProblemController::class);
 Route::apiResource('issue', IssueController::class);
 Route::apiResource('support', SupportController::class);
 
