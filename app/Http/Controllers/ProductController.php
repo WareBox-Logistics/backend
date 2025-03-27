@@ -11,23 +11,14 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     public function index() {
-        try{
-            $products =  Product::all();
-
-            //get the company and category
-            foreach($products as $product){
-                $company = Company::where('id',$product->company)->first();
-                $product->company = $company;
-
-                //get the category
-                $category = Category::where('id',$product->category)->first();
-                $product->category = $category; 
-            }
-
+        try {
+            $products = Product::with(['company', 'category'])->get();
+    
             return response()->json([
-                'products'=>$products
+                'products' => $products
             ]);
-        }catch(\Exception $e){
+        }
+        catch(\Exception $e){
             return response()->json([
                 'error'=>'error fetching products',
                 'message'=>$e->getMessage()
@@ -73,7 +64,7 @@ class ProductController extends Controller
             // Manejo de la imagen
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imageName = $fields['name'] . '_' . $fields['company'] . '.' . $image->getClientOriginalExtension();
+                $imageName = time() . '_' . $fields['name'] . '_' . $fields['company'] . '.' . $image->getClientOriginalExtension();
                 $path = $image->storeAs('product_images', $imageName, 'public');
                 $fields['image'] = Storage::url($path);
             }
@@ -138,33 +129,32 @@ class ProductController extends Controller
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id) {
         try {
             $product = Product::findOrFail($id);
 
             $fields = $request->validate([
-                'name' => 'required|max:50',
-                'description' => 'required|max:100',
-                'price' => 'required',
-                'category' => 'required',
-                'sku' => 'required',
+                'name' => 'sometimes|max:50',
+                'description' => 'sometimes|max:100',
+                'price' => 'sometimes',
+                'category' => 'sometimes',
+                'sku' => 'sometimes',
                 'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
-                'company' => 'required'
+                'company' => 'sometimes'
             ]);
-
+    
             // Manejo de la imagen
             if ($request->hasFile('image')) {
-                // Elimina la imagen anterior si existe
                 if ($product->image && Storage::exists(str_replace('/storage', 'public', $product->image))) {
                     Storage::delete(str_replace('/storage', 'public', $product->image));
                 }
-
+    
                 $image = $request->file('image');
-                $imageName = $fields['name'] . '_' . $fields['company'] . '.' . $image->getClientOriginalExtension();
+                $imageName = time() . '_' . ($fields['name'] ?? $product->name) . '_' . ($fields['company'] ?? $product->company) . '.' . $image->getClientOriginalExtension();
                 $path = $image->storeAs('product_images', $imageName, 'public');
                 $fields['image'] = Storage::url($path);
             }
-
+    
             $product->update($fields);
 
             return response()->json([
@@ -182,6 +172,11 @@ class ProductController extends Controller
     public function destroy($id){
         try{
             $product = Product::findOrFail($id);
+
+            if ($product->image && Storage::exists(str_replace('/storage', 'public', $product->image))) {
+                Storage::delete(str_replace('/storage', 'public', $product->image));
+            }
+
             $product->delete();
 
             return response()->json([
