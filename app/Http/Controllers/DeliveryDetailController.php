@@ -43,7 +43,6 @@ class DeliveryDetailController extends Controller
             $fields = $request->validate([
                 'delivery'=>'required',
                 'product'=>'required',
-                'qty' => 'required|numeric|min:1'
             ]);
 
             $detail = DeliveryDetail::create($fields);

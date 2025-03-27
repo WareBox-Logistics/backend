@@ -238,4 +238,49 @@ class LotController extends Controller
         }
     }
 
+    public function findVehicleParkingLocation(Request $request)
+{
+    try {
+        $fields = $request->validate([
+            'vehicleID' => 'required|exists:vehicles,id'
+        ]);
+
+        $vehicleId = $fields['vehicleID'];
+        
+        // Find the lot where this vehicle is parked
+        $lot = Lot::with(['parkingLot.warehouse'])
+            ->where('vehicle_id', $vehicleId)
+            ->where('is_occupied', true)
+            ->first();
+
+        if (!$lot) {
+            return response()->json([
+                'message' => 'This vehicle is not currently parked in any lot.'
+            ], 404);
+        }
+
+        return response()->json([
+            'vehicle_id' => $vehicleId,
+            'parking_location' => [
+                'warehouse_id' => $lot->parkingLot->warehouse->id,
+                'warehouse_name' => $lot->parkingLot->warehouse->name, 
+                'parking_lot_id' => $lot->parking_lot_id,
+                'parking_lot_name' => $lot->parkingLot->name,
+                'lot_id' => $lot->id,
+                'spot_code' => $lot->spot_code,
+                'coordinates' => [
+                    'row' => substr($lot->spot_code, 0, 1), 
+                    'column' => substr($lot->spot_code, 1)  
+                ]
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error finding vehicle parking location.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
 }
