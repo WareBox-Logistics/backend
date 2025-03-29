@@ -55,4 +55,8 @@ class Employee extends Authenticatable
     public function warehouse(){
         return $this->belongsTo(Warehouse::class);
     }
+
+    public function reports(){
+        return $this->belongsTo(Report::class);
+    }
 }

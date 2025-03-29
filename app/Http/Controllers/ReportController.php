@@ -10,10 +10,11 @@ class ReportController extends Controller
 {
     public function index(){
         try{
+            $company = Report::with(['driver','problem'])->get();
+
             return response()->json([
-                'data'=>Report::all(),
-                'info'=>'mesagelkdkldkdkdkdkdkdkdk'
-            ]);
+                'reports'=>$company,
+            ],200);
         }catch(Exception $e){
             return response()->json($e);
         }
@@ -23,7 +24,7 @@ class ReportController extends Controller
         try{
             $repo = Report::find($id);
             return response()->json([
-                'data' => $repo
+                'reports' => $repo
             ]);
         }catch(Exception $e){
             return response()->json($e);
@@ -41,10 +42,52 @@ class ReportController extends Controller
                 'driver' => 'required|exists:employee,id'
             ]);
             return response()->json([
-                'data' => Report::create($validatedData)
+                'reports' => Report::create($validatedData)
             ]);
         }catch(Exception $e){
             return response()->json($e);
+        }
+    }
+
+    public function update(Request $request, $id){
+        try{
+            $report = Report::findOrFail($id);
+
+            $fields = $request->validate([
+                'latitude' => 'required|string',
+                'longitude' => 'required|string',
+                'problem' => 'required|exists:problem,id',
+                'issue' => 'required|boolean',
+                'description' => 'required|string',
+                'driver' => 'required|exists:employee,id'
+            ]);
+            $report->update($fields);
+            
+            return response()->json([
+                'reports'=> $report
+            ], 200);
+
+        }catch(Exception $e){
+            return response()->json([
+                'error' => 'Error updating a report',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function destroy($id){
+        try{
+            $report = Report::findOrFail($id);
+            $report->delete();
+
+            return response()->json([
+                'reports' => $report
+            ], 200);
+        }catch(Exception $e){
+            return response()->json([
+                'error' => 'Error deleting a company',
+                'message' => $e->getMessage()
+            ]);
         }
     }
 }

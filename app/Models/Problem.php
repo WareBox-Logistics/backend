@@ -12,4 +12,8 @@ class Problem extends Model
         'name',
         'level',
     ];
+    
+    public function problems(){
+        return $this->hasMany(Report::class);
+    }
 }
