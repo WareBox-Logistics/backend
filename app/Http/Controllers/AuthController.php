@@ -19,6 +19,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:employee',
             'password' => 'required|confirmed',
             'role' => 'required',
+            'warehouse' => 'nullable|integer',   
         ]);
 
         $user = Employee::create($fields);
