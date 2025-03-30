@@ -80,6 +80,8 @@ Route::apiResource('dock-assigmnet', DockAssignmentController::class)->middlewar
 Route::apiResource('dock',DockController::class)->middleware('auth:sanctum');
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
+Route::put('/dock-assignments/{truck}', [DockAssignmentController::class, 'update'])->middleware('auth:sanctum');
+
 //Pallets
 Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
 
