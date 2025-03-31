@@ -53,7 +53,7 @@ class Employee extends Authenticatable
         return $this->hasMany(Support::class);
     }
     public function warehouse(){
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse');
     }
 
     public function reports(){
