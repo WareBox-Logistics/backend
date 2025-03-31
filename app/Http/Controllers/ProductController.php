@@ -57,17 +57,18 @@ class ProductController extends Controller
                 'price' => 'required',
                 'category' => 'required',
                 'sku' => 'required',
-                'image' => 'required|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                // 'image' => 'required|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'image' => 'required|url',
                 'company' => 'required'
             ]);
 
             // Manejo de la imagen
-            if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $imageName = time() . '_' . $fields['name'] . '_' . $fields['company'] . '.' . $image->getClientOriginalExtension();
-                $path = $image->storeAs('product_images', $imageName, 'public');
-                $fields['image'] = Storage::url($path);
-            }
+            // if ($request->hasFile('image')) {
+            //     $image = $request->file('image');
+            //     $imageName = time() . '_' . $fields['name'] . '_' . $fields['company'] . '.' . $image->getClientOriginalExtension();
+            //     $path = $image->storeAs('product_images', $imageName, 'public');
+            //     $fields['image'] = Storage::url($path);
+            // }
 
             $product = Product::create($fields);
 
@@ -139,21 +140,22 @@ class ProductController extends Controller
                 'price' => 'sometimes',
                 'category' => 'sometimes',
                 'sku' => 'sometimes',
-                'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                // 'image' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'image' => 'nullable|url',
                 'company' => 'sometimes'
             ]);
     
             // Manejo de la imagen
-            if ($request->hasFile('image')) {
-                if ($product->image && Storage::exists(str_replace('/storage', 'public', $product->image))) {
-                    Storage::delete(str_replace('/storage', 'public', $product->image));
-                }
+            // if ($request->hasFile('image')) {
+            //     if ($product->image && Storage::exists(str_replace('/storage', 'public', $product->image))) {
+            //         Storage::delete(str_replace('/storage', 'public', $product->image));
+            //     }
     
-                $image = $request->file('image');
-                $imageName = time() . '_' . ($fields['name'] ?? $product->name) . '_' . ($fields['company'] ?? $product->company) . '.' . $image->getClientOriginalExtension();
-                $path = $image->storeAs('product_images', $imageName, 'public');
-                $fields['image'] = Storage::url($path);
-            }
+            //     $image = $request->file('image');
+            //     $imageName = time() . '_' . ($fields['name'] ?? $product->name) . '_' . ($fields['company'] ?? $product->company) . '.' . $image->getClientOriginalExtension();
+            //     $path = $image->storeAs('product_images', $imageName, 'public');
+            //     $fields['image'] = Storage::url($path);
+            // }
     
             $product->update($fields);
 
