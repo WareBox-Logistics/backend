@@ -99,7 +99,9 @@ public function show($id)
              $pallets = Pallet::with(['company', 'warehouse'])
              ->where('warehouse', $validatedData['warehouseID'])
              ->where('company', $validatedData['companyID'])
-             ->where('status', 'Stored')
+             ->where(function($query) {
+                $query->where('status', 'Stored');
+            })
              ->get();
      
              if ($pallets->isEmpty()) {

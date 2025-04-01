@@ -18,7 +18,8 @@ class Employee extends Authenticatable
         'email',
         'password',
         'role',
-        'warehouse'
+        'warehouse',
+        'fcm_token'
     ];
 
     protected $hidden = [

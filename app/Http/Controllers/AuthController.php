@@ -128,5 +128,14 @@ class AuthController extends Controller
             return response()->json(['message' => 'Logged out successfully'], 200);
         }
         
-
+        public function updateFcmToken(Employee $user, Request $request)
+        {
+            $request->validate([
+                'fcm_token' => 'required|string'
+            ]);
+        
+            $user->update(['fcm_token' => $request->fcm_token]);
+            
+            return response()->json(['message' => 'FCM token updated']);
+        }
 }

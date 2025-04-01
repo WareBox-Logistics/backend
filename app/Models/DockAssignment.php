@@ -16,6 +16,7 @@ class DockAssignment extends Model
         'truck',
         'status',
         'scheduled_time',
+         'duration_minutes'
     ];
 
     public function dock()

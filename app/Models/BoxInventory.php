@@ -27,10 +27,9 @@ class BoxInventory extends Model
             return $this->belongsTo(Pallet::class, 'pallet');
         }
     
-        public function inventory()
+        public function product()
         {
-            return $this->belongsTo(Inventory::class, 'inventory');
-        
-}
+            return $this->belongsTo(Product::class, 'product');
+        }
 
 }

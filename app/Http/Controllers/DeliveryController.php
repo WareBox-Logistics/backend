@@ -9,19 +9,24 @@ use App\Models\Location;
 use Illuminate\Support\Facades\Validator;
 use App\Models\DeliveryDetail;
 use App\Models\Employee;
+use Illuminate\Support\Facades\Log;
+use App\Services\VehicleAvailabilityService;
+use App\Models\Pallet;
+use Illuminate\Support\Facades\DB;
+
+
 
 class DeliveryController extends Controller
 {
     public function index()
     {
         $deliveries = Delivery::with(['truck', 'trailer', 'company', 'origin', 'destination'])
-            ->orderBy('shipping_date', 'desc')
-            ->paginate(15);
+            ->orderBy('shipping_date', 'desc');
 
         return response()->json($deliveries);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, VehicleAvailabilityService $availabilityService)
     {
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:warehouse_to_location,location_to_warehouse,warehouse_to_warehouse,location_to_location',
@@ -37,8 +42,8 @@ class DeliveryController extends Controller
             'route' => 'nullable|array',
             'route.PolylinePath' => 'required_with:route|array',
             'route.RouteDirections' => 'required_with:route|array',
-            'delivery_details' => 'nullable|array',  // Changed from delivery_details to pallets
-            'delivery_details.*' => 'exists:pallet,id', // Validate each pallet ID exists
+            'delivery_details' => 'nullable|array',  
+            'delivery_details.*' => 'exists:pallet,id',
             'created_by' => 'required|exists:employee,id'
         ]);
     
@@ -47,7 +52,10 @@ class DeliveryController extends Controller
         }
     
         $validated = $validator->validated();
-    
+
+        DB::beginTransaction();
+
+        try {
         // Map origin/destination types to model classes
         $originType = $validated['origin_type'] === 'warehouse' ? Warehouse::class : Location::class;
         $destinationType = $validated['destination_type'] === 'warehouse' ? Warehouse::class : Location::class;
@@ -70,17 +78,24 @@ class DeliveryController extends Controller
             'route' => $validated['route'] ?? null,
         ]);
     
+       
         // Calculate and save duration
         $delivery->calculateDuration();
         $delivery->save();
-    
-        // Add delivery details (pallets) if provided
+
         if (!empty($validated['delivery_details'])) {
             foreach ($validated['delivery_details'] as $palletId) {
+                // Create delivery detail
                 DeliveryDetail::create([
                     'delivery' => $delivery->id,
                     'pallet' => $palletId['pallet_id']
                 ]);
+
+                // Update pallet status to "In Transit"
+                Pallet::where('id', $palletId['pallet_id'])
+                    ->update([
+                        'status' => 'In Transit'
+                    ]);
             }
         }
 
@@ -96,11 +111,33 @@ class DeliveryController extends Controller
                 }
             ]);
 
+            if ($delivery->truck->driver) {
+                $this->notifyDriver($delivery);
+            }
+
+            DB::commit();
+
             return response()->json([
                 'message' => 'Delivery created successfully',
                 'data' => $delivery
             ], 201);
+
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            DB::rollBack();
+            
+            Log::error('Delivery creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+    
+            return response()->json([
+                'message' => 'Failed to create delivery',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
     public function show(Delivery $delivery)
     {
@@ -162,51 +199,177 @@ class DeliveryController extends Controller
     }
 
     public function getDeliveriesBasedOnDriver(Request $request)
-{
-    try {
-        $params = $request->validate([
-            "driverID" => 'required|exists:employee,id'
-        ]);
-
-        // Get the driver (employee) with their assigned truck
-        $driver = Employee::with('truck')->findOrFail($params['driverID']);
-
-        if ($driver->role !== 3) {
+    {
+        try {
+            $params = $request->validate([
+                "driverID" => 'required|exists:employee,id'
+            ]);
+    
+            // Get the driver (employee) with their assigned truck
+            $driver = Employee::with('truck')->findOrFail($params['driverID']);
+    
+            if ($driver->role !== 3) {
+                return response()->json([
+                    'message' => 'The specified employee is not a driver',
+                    'data' => []
+                ], 400);
+            }
+    
+            if (!$driver->truck) {
+                return response()->json([
+                    'message' => 'This driver has no assigned vehicle',
+                    'data' => []
+                ], 400);
+            }
+    
+            // Get current date (start of day)
+            $today = now()->startOfDay();
+    
+            $deliveries = Delivery::with([
+                    'truck',
+                    'trailer',
+                    'company',
+                    'origin',
+                    'destination',
+                    'deliveryDetails.pallet'
+                ])
+                ->where('status', 'Pending')
+                ->where('truck', $driver->truck->id)
+                // Only deliveries for today or future
+                ->where('shipping_date', '>=', $today)
+                ->orderBy('shipping_date', 'asc') // Order by soonest first
+                ->get();
+    
             return response()->json([
-                'message' => 'The specified employee is not a driver',
-                'data' => []
-            ], 400);
-        }
-
-        if (!$driver->truck) {
+                'message' => 'Deliveries retrieved successfully',
+                'data' => $deliveries
+            ]);
+    
+        } catch (\Exception $e) {
             return response()->json([
-                'message' => 'This driver has no assigned vehicle',
-                'data' => []
-            ], 400);
+                'message' => 'Error retrieving deliveries',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $deliveries = Delivery::with([
-                'truck',
-                'trailer',
-                'company',
-                'origin',
-                'destination',
-                'deliveryDetails.pallet'
-            ])
-            ->where('status', 'Pending')
-            ->where('truck', $driver->truck->id)
-            ->get();
-
-        return response()->json([
-            'message' => 'Deliveries retrieved successfully',
-            'data' => $deliveries
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Error retrieving deliveries',
-            'error' => $e->getMessage()
-        ], 500);
     }
+
+public function currentAndFutureDeliveries()
+{
+    $today = now()->format('Y-m-d'); 
+    
+    $deliveries = Delivery::with(['truck', 'trailer', 'company', 'origin', 'destination'])
+        ->whereDate('shipping_date', '>=', $today) 
+        ->orderBy('shipping_date', 'asc')
+        ->get();
+    
+    return response()->json($deliveries);
+}
+
+protected function notifyDriver(Delivery $delivery)
+{
+    $driver = $delivery->truck->driver;
+    
+    \Illuminate\Support\Facades\Log::debug("Notification initiated for driver", [
+        'driver_id' => $driver->id,
+        'fcm_token_exists' => !empty($driver->fcm_token)
+    ]);
+
+    if (!$driver->fcm_token) {
+        \Illuminate\Support\Facades\Log::warning("No FCM token for driver", ['driver_id' => $driver->id]);
+        return;
+    }
+
+    try {
+        $factory = (new \Kreait\Firebase\Factory)
+            ->withServiceAccount(storage_path('app/firebase-service-account.json'));
+
+        $messaging = $factory->createMessaging();
+
+        $notification = \Kreait\Firebase\Messaging\Notification::create(
+            'New Delivery Assigned',
+            "Delivery #{$delivery->id} - {$delivery->origin->name} to {$delivery->destination->name}"
+        );
+
+        $message = \Kreait\Firebase\Messaging\CloudMessage::new()
+            ->withNotification($notification)
+            ->withData([
+                'delivery_id' => (string)$delivery->id,
+                'type' => 'new_delivery'
+            ])
+            ->withTarget('token', $driver->fcm_token);
+
+        \Illuminate\Support\Facades\Log::debug("Attempting to send FCM message", [
+            'token' => $driver->fcm_token,
+            'message' => $message->jsonSerialize()
+        ]);
+
+        $response = $messaging->send($message);
+        
+        \Illuminate\Support\Facades\Log::info("FCM message sent successfully", [
+            'driver_id' => $driver->id,
+            'message_id' => $response instanceof \Kreait\Firebase\Messaging\SendReport ? $response->name() : 'unknown'
+        ]);
+
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error("FCM Error", [
+            'driver_id' => $driver->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        if (str_contains($e->getMessage(), '401') || str_contains($e->getMessage(), '404')) {
+            $driver->update(['fcm_token' => null]);
+            \Illuminate\Support\Facades\Log::warning("Cleared invalid FCM token for driver", ['driver_id' => $driver->id]);
+        }
+    }
+}
+
+public function filteredDelivery($id)
+{
+    // Get the full delivery data with all relationships
+    $delivery = Delivery::with([
+        'origin:id,name',
+        'destination:id,name',
+        'deliveryDetails.pallet.boxInventories.product:id,name,sku'
+    ])->findOrFail($id);
+
+    // Convert the delivery to an array
+    $deliveryArray = $delivery->toArray();
+
+    // Build the response manually
+    $response = [
+        'delivery_id' => $deliveryArray['id'],
+        'origin' => $deliveryArray['origin']['name'],
+        'destination' => $deliveryArray['destination']['name'],
+        'status' => $deliveryArray['status'],
+        'pallets' => []
+    ];
+
+    // Process each delivery detail
+    foreach ($deliveryArray['delivery_details'] as $detail) {
+        // Skip if pallet data is missing
+        if (!isset($detail['pallet'])) {
+            continue;
+        }
+
+        $pallet = [
+            'pallet_id' => $detail['pallet']['id'],
+            'boxes' => []
+        ];
+
+        // Process each box in the pallet
+        foreach ($detail['pallet']['box_inventories'] as $box) {
+            $pallet['boxes'][] = [
+                'box_id' => $box['id'],
+                'product_name' => $box['product']['name'],
+                'product_sku' => $box['product']['sku'],
+                'quantity' => $box['qty']
+            ];
+        }
+
+        $response['pallets'][] = $pallet;
+    }
+
+    return response()->json($response);
 }
 }

@@ -24,7 +24,22 @@ class Vehicle extends Model
     public function modell(){
         return $this->belongsTo(Modell::class);
     }
-    public function deliveries(){
-        return $this->hasMany(Delivery::class);
+    public function deliveries()
+    {
+        return $this->hasMany(Delivery::class, 'truck', 'id')
+            ->orWhere('trailer', 'id');
     }
+
+    public function availability()
+    {
+        return $this->hasMany(VehicleAvailability::class, 'vehicle_id')
+            ->from('vehicle_availability');
+    }
+
+    public function activeAvailability()
+    {
+        return $this->availability()
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now());
+}
 }
