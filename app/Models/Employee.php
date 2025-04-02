@@ -18,7 +18,8 @@ class Employee extends Authenticatable
         'email',
         'password',
         'role',
-        'warehouse'
+        'warehouse',
+        'fcm_token'
     ];
 
     protected $hidden = [
@@ -53,6 +54,10 @@ class Employee extends Authenticatable
         return $this->hasMany(Support::class);
     }
     public function warehouse(){
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse');
+    }
+
+    public function reports(){
+        return $this->belongsTo(Report::class);
     }
 }

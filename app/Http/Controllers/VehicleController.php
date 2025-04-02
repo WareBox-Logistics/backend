@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use App\Models\Modell;
+use App\Services\VehicleAvailabilityService;
 
 class VehicleController extends Controller
 {
@@ -166,4 +167,42 @@ class VehicleController extends Controller
             ]);
         }
     }
+
+    public function available(Request $request, VehicleAvailabilityService $availabilityService)
+{
+    $request->validate([
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after:start_date',
+        'type' => 'nullable|in:truck,trailer'
+    ]);
+
+    $vehicles = $availabilityService->getAvailableVehicles(
+        $request->start_date,
+        $request->end_date,
+        $request->type
+    );
+
+    return response()->json(['vehicles' => $vehicles]);
+}
+
+public function reserveVehicle(Request $request, VehicleAvailabilityService $availabilityService)
+{
+    $request->validate([
+        'vehicleID' => 'required|exists:vehicles,id',
+        'start_date' => 'required|date',
+        'end_date' => 'required|date|after:start_date',
+        'type' => 'nullable|in:delivery,other',
+        'deliveryID' => 'required|exists:delivery,id'
+    ]);
+
+    $reservation = $availabilityService->reserveVehicle(
+        $request->vehicleID,
+        $request->start_date,
+        $request->end_date,
+        $request->type,
+        $request->deliveryID
+    );
+
+    return response()->json( $reservation);
+}
 }

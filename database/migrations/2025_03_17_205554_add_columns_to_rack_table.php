@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rack', function (Blueprint $table) {
+            $table->dropColumn('height');
+            $table->dropColumn('width');
+            $table->dropColumn('depth');
             $table->unsignedBigInteger('levels')->check('levels > 0')->nullable();;
             $table->decimal('height')->check('height > 0')->after('levels')->nullable();;
             $table->decimal('width')->check('width > 0')->after('height')->nullable();;

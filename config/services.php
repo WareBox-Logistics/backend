@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'firebase' => [
+        'credentials' => storage_path('app/firebase/service-account-key.json'),
+        'database_uri' => 'https://warebox-86369-default-rtdb.firebaseio.com',
+],
+
 ];
+

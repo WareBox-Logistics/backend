@@ -7,20 +7,26 @@ use App\Models\Rack;
 
 class RackController extends Controller
 {
-     public function index()
-     {
-         try{
-            $racks =  Rack::all();
+    public function index(Request $request) {
+        try {
+            $warehouseId = $request->query('warehouse'); 
+    
+            $query = Rack::query();
+    
+            if ($warehouseId) {
+                $query->where('warehouse', $warehouseId); 
+            }
+    
+            $racks = $query->get();
+    
+            return response()->json(['data' => $racks]);
+        } catch (\Exception $e) {
             return response()->json([
-                'data'=>$racks
-            ]);
-        }catch(\Exception $e){
-            return response()->json([
-                'error'=>'error fetching racks',
-                'message'=>$e->getMessage()
-            ]);
+                'error' => 'Error fetching racks',
+                'message' => $e->getMessage()
+            ], 500);
         }
-     }
+    }
  
      public function find($id)
      {

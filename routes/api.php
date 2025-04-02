@@ -28,7 +28,8 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\LotController;
 use App\Http\Controllers\ModellController;
 use App\Http\Controllers\ParkingLotController;
-use App\Models\Delivery;
+use App\Http\Controllers\ProblemController;
+use App\Services\VehicleAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +40,8 @@ use Illuminate\Support\Facades\Log;
 Route::post('/registerEmployee',[AuthController::class, 'registerEmployee']);
 Route::post('/loginEmployee', [AuthController::class, 'loginEmployee']);
 Route::post('/logout',[AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::put('users/{user}/fcm-token', [AuthController::class, 'updateFcmToken']);
+
 
 //ROLE
 Route::apiResource('role',RoleController::class)->middleware('auth:sanctum');
@@ -47,12 +50,16 @@ Route::apiResource('company',CompanyController::class)->middleware('auth:sanctum
 //Delivery
 Route::apiResource('delivery',DeliveryController::class)->middleware('auth:sanctum');
 Route::post('delivery-driver', [DeliveryController::class, 'getDeliveriesBasedOnDriver'])->middleware('auth:sanctum');
+Route::get('/deliveries/current-and-future', [DeliveryController::class, 'currentAndFutureDeliveries'])->middleware('auth:sanctum');
+Route::get('delivery/filtered/{deliveryID}', [DeliveryController::class, 'filteredDelivery'])->middleware('auth:sanctum');
 //Delivery Detail
 Route::apiResource('delivery-detail',DeliveryDetailController::class)->middleware('auth:sanctum');
 //Employee
 Route::apiResource('employee',EmployeeController::class)->middleware('auth:sanctum');
 //Driver
 Route::get('driver', [EmployeeController::class, 'getDrivers'])->middleware('auth:sanctum');
+//Client
+Route::get('client', [EmployeeController::class, 'getClients'])->middleware('auth:sanctum');
 //Location
 Route::apiResource('location',LocationController::class)->middleware('auth:sanctum');
 //Service
@@ -63,20 +70,30 @@ Route::apiResource('trailer',TrailerController::class)->middleware('auth:sanctum
 Route::apiResource('truck',TruckController::class)->middleware('auth:sanctum');
 //warehouse
 Route::apiResource('warehouse',WarehouseController::class)->middleware('auth:sanctum');
-//vehicle
+//vehiclex
 Route::apiResource('vehicle',VehicleController::class)->middleware('auth:sanctum');
+Route::post('/vehicles/available', [VehicleController::class, 'available'])->middleware('auth:sanctum');
+Route::post('/vehicles/reserve', [VehicleController::class, 'reserveVehicle'])->middleware('auth:sanctum');
+
 //Brand
 Route::apiResource('brand',BrandController::class)->middleware('auth:sanctum');
 //Model
 Route::apiResource('model',ModellController::class)->middleware('auth:sanctum');
+
+Route::post('docks/check-availability', [DockController::class, 'checkAvailability'])->middleware('auth:sanctum');
+Route::post('docks/reserve', [DockController::class, 'reserveDock'])->middleware('auth:sanctum');
+Route::post('docks/release', [DockController::class, 'releaseDock'])->middleware('auth:sanctum');
 
 //Derian
 Route::apiResource('box-inventory', BoxInventoryController::class)->middleware('auth:sanctum');
 Route::apiResource('pallet', PalletController::class)->middleware('auth:sanctum');
 Route::apiResource('dock-assigmnet', DockAssignmentController::class)->middleware('auth:sanctum');
 Route::apiResource('dock',DockController::class)->middleware('auth:sanctum');
+Route::get('docks/warehouse/{warehouseId}', [DockController::class, 'getByWarehouse'])->middleware('auth:sanctum');
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
+Route::put('/dock-assignments/{truck}', [DockAssignmentController::class, 'update'])->middleware('auth:sanctum');
+
 //Pallets
 Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
 
@@ -85,6 +102,7 @@ Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletControlle
 
 //Dispatch
 Route::apiResource('report', ReportController::class);
+Route::apiResource('problem', ProblemController::class);
 Route::apiResource('issue', IssueController::class);
 Route::apiResource('support', SupportController::class);
 
@@ -164,6 +182,30 @@ Route::post('/proxy/coordsID', function (Request $request){
         return response()->json([
             'error' => 'Error fetching data',
             'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+Route::get('/test-reservation', function(VehicleAvailabilityService $service) {
+    try {
+        $reservation = $service->reserveVehicle(
+            1, // vehicle_id
+            now()->toDateTimeString(), // start_date
+            now()->addHours(2)->toDateTimeString(), // end_date
+            'test', // type
+            999 // delivery_id (test value)
+        );
+        
+        return response()->json([
+            'success' => true,
+            'reservation' => $reservation
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ], 500);
     }
 });

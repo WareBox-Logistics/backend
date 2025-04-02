@@ -25,10 +25,10 @@ class Report extends Model
     }
 
     public function problem(){
-        return $this->belongsTo(Problem::class);
+        return $this->belongsTo(Problem::class,'problem');
     }
 
     public function driver(){
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class,'driver');
     }
 }

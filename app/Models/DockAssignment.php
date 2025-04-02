@@ -10,14 +10,13 @@ class DockAssignment extends Model
     use HasFactory;
 
     protected $table = 'dock_assignment';
-
-    protected $primaryKey = ['dock', 'truck'];
     
     protected $fillable = [
         'dock',
         'truck',
         'status',
         'scheduled_time',
+         'duration_minutes'
     ];
 
     public function dock()

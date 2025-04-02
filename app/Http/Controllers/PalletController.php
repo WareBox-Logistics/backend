@@ -99,7 +99,9 @@ public function show($id)
              $pallets = Pallet::with(['company', 'warehouse'])
              ->where('warehouse', $validatedData['warehouseID'])
              ->where('company', $validatedData['companyID'])
-             ->where('status', 'Stored')
+             ->where(function($query) {
+                $query->where('status', 'Stored');
+            })
              ->get();
      
              if ($pallets->isEmpty()) {
@@ -113,4 +115,21 @@ public function show($id)
              return response()->json(['message' => $e->getMessage()], 500);
          }
      }
+     public function destroy($id)
+{
+    try {
+        $pallet = Pallet::find($id);
+
+        if (!$pallet) {
+            return response()->json(['message' => 'Pallet not found'], 404);
+        }
+
+        $pallet->delete();
+
+        return response()->json(['message' => 'Pallet deleted successfully'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 500);
+    }
+}
+
 }
