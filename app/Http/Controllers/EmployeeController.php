@@ -62,6 +62,23 @@ class EmployeeController extends Controller
         }
     }
 
+    public function getOperators() {
+        try {
+            
+            $drivers = Employee::where('role', 4)->get();
+    
+            return response()->json([
+                'operators' => $drivers
+            ]);
+        } 
+        catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error fetching drivers',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
     public function getClients() {
         try {
             

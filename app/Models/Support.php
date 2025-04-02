@@ -23,7 +23,7 @@ class Support extends Model
     }
 
     public function operator(){
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'operator');
     }
     
 }

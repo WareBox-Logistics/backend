@@ -30,6 +30,8 @@ use App\Http\Controllers\ModellController;
 use App\Http\Controllers\ParkingLotController;
 use App\Http\Controllers\ProblemController;
 use App\Services\VehicleAvailabilityService;
+use App\Models\Delivery;
+use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -57,7 +59,9 @@ Route::apiResource('delivery-detail',DeliveryDetailController::class)->middlewar
 //Employee
 Route::apiResource('employee',EmployeeController::class)->middleware('auth:sanctum');
 //Driver
-Route::get('driver', [EmployeeController::class, 'getDrivers'])->middleware('auth:sanctum');
+Route::get('driver', [EmployeeController::class, 'getDrivers']); //->middleware('auth:sanctum');
+//Operator
+Route::get('operator', [EmployeeController::class, 'getOperators']); //->middleware('auth:sanctum');
 //Client
 Route::get('client', [EmployeeController::class, 'getClients'])->middleware('auth:sanctum');
 //Location
@@ -101,6 +105,9 @@ Route::put('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::
 Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::class, 'destroy']);
 
 //Dispatch
+Route::get('report/without-issue', [ReportController::class, 'reportsWithoutIssue']);
+
+
 Route::apiResource('report', ReportController::class);
 Route::apiResource('problem', ProblemController::class);
 Route::apiResource('issue', IssueController::class);
