@@ -21,7 +21,8 @@ class DeliveryController extends Controller
     public function index()
     {
         $deliveries = Delivery::with(['truck', 'trailer', 'company', 'origin', 'destination'])
-            ->orderBy('shipping_date', 'desc');
+            ->orderBy('shipping_date', 'desc')
+            ->paginate(200);
 
         return response()->json($deliveries);
     }
