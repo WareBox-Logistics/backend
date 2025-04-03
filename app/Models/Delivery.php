@@ -60,13 +60,15 @@ class Delivery extends Model
     const STATUS_LOADING = 'Loading';
     const STATUS_DELIVERING = 'Delivering';
     const STATUS_EMPTYING = 'Emptying';
-
+    const STATUS_DELIVERED = 'Delivered'; 
+    
     public static $statuses = [
         self::STATUS_PENDING => 'Pending',
         self::STATUS_DOCKING => 'Docking',
         self::STATUS_LOADING => 'Loading',
         self::STATUS_DELIVERING => 'Delivering',
         self::STATUS_EMPTYING => 'Emptying',
+        self::STATUS_DELIVERED => 'Delivered', 
     ];
 
     public function truck()
@@ -125,6 +127,11 @@ class Delivery extends Model
         if ($this->shipping_date && $this->estimated_arrival) {
             $this->estimated_duration_minutes = $this->shipping_date->diffInMinutes($this->estimated_arrival);
         }
+    }
+
+    public function dockAssignment()
+    {
+        return $this->hasOne(DockAssignment::class);
     }
 
 }

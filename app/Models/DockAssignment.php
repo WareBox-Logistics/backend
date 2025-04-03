@@ -13,19 +13,24 @@ class DockAssignment extends Model
     
     protected $fillable = [
         'dock',
-        'truck',
+        'delivery_id',
         'status',
         'scheduled_time',
          'duration_minutes'
     ];
 
+    protected $casts = [
+        'scheduled_time' => 'datetime',
+    ];
+
     public function dock()
     {
-        return $this->belongsTo(Dock::class, 'dock');
+        return $this->belongsTo(Dock::class, 'dock', 'id');
     }
 
-    public function truck()
+    public function delivery()
     {
-        return $this->belongsTo(Vehicle::class, 'truck');
+        return $this->belongsTo(Delivery::class);
     }
+    
 }

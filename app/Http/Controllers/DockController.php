@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Dock;
 use App\Models\DockAssignment;
 use Illuminate\Support\Carbon;
+use App\Models\Delivery;
 
 class DockController extends Controller
 {
@@ -190,5 +191,42 @@ public function releaseDock(Request $request)
         'message' => 'Dock released successfully',
         'assignment' => $assignment->fresh()
     ]);
+    }
+
+
+    public function setToLoading(Dock $dock)
+{
+    try {
+        if ($dock->status !== 'Occupied') { 
+            return response()->json([
+                'message' => 'Dock must be in Occupied status to change to Loading',
+                'current_status' => $dock->status
+            ], 400);
+        }
+
+        if ($dock->type !== 'Loading') {
+            return response()->json([
+                'message' => 'Dock is not configured for loading',
+                'current_type' => $dock->type
+            ], 400);
+        }
+
+        $dock->update([
+            'status' => 'Loading'
+        ]);
+
+        return response()->json([
+            'message' => 'Dock status updated to Loading',
+            'dock_id' => $dock->id,
+            'new_status' => $dock->status
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to update dock status',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
+
 }

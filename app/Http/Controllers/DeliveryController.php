@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Log;
 use App\Services\VehicleAvailabilityService;
 use App\Models\Pallet;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\DockAssignment;
+use App\Models\Dock;
+use Carbon\Carbon;
 
 
 class DeliveryController extends Controller
@@ -112,9 +114,9 @@ class DeliveryController extends Controller
                 }
             ]);
 
-            if ($delivery->truck->driver) {
-                $this->notifyDriver($delivery);
-            }
+            // if ($delivery->truck->driver) {
+            //     $this->notifyDriver($delivery);
+            // }
 
             DB::commit();
 
@@ -373,4 +375,179 @@ public function filteredDelivery($id)
 
     return response()->json($response);
 }
+
+
+
+public function getDockAssignment($deliveryId)
+{
+    try {
+        $delivery = Delivery::findOrFail($deliveryId);
+        
+        $assignment = DockAssignment::with(['dock.warehouse'])
+            ->where('truck', $delivery->truck)
+            ->where('scheduled_time', '>=', now())
+            ->first();
+
+        if (!$assignment) {
+            return response()->json(['message' => 'No dock assignment found'], 404);
+        }
+
+        $dockData = is_int($assignment->dock) 
+            ? Dock::with('warehouse')->find($assignment->dock)
+            : $assignment->dock;
+
+        return response()->json([
+            'delivery_id' => $delivery->id,
+            'truck_id' => $delivery->truck,
+            'dock' => [
+                'id' => $dockData->id,
+                'number' => $dockData->number,
+                'warehouse' => optional($dockData->warehouse)->name
+            ],
+            'scheduled_time' => $this->formatDateTime($assignment->scheduled_time),
+            'status' => $assignment->status
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error retrieving dock assignment',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+protected function formatDateTime($dateTime)
+{
+    if (is_string($dateTime)) {
+        try {
+            return Carbon::parse($dateTime)->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            Log::error('Failed to parse date string', [
+                'date' => $dateTime,
+                'error' => $e->getMessage()
+            ]);
+            return $dateTime; 
+        }
+    }
+    
+    if ($dateTime instanceof \Carbon\Carbon) {
+        return $dateTime->format('Y-m-d H:i:s');
+    }
+    
+    return null;
+}
+
+    public function startDelivering(Delivery $delivery)
+    {
+        try {
+            // Validate current status
+            if ($delivery->status !== Delivery::STATUS_LOADING) {
+                return response()->json([
+                    'message' => 'Delivery must be in Loading status to start delivering',
+                    'current_status' => $delivery->status
+                ], 400);
+            }
+
+            DB::transaction(function () use ($delivery) {
+                // Update delivery status
+                $delivery->update([
+                    'status' => Delivery::STATUS_DELIVERING,
+                    'updated_at' => now()
+                ]);
+                
+                // Free the associated dock
+                if ($delivery->dockAssignment) {
+                    $delivery->dockAssignment->dock()->update(['status' => 'Available']);
+                    $delivery->dockAssignment()->update(['status' => 'Completed']);
+                }
+            });
+
+            return response()->json([
+                'message' => 'Delivery status updated to Delivering and dock released',
+                'delivery_id' => $delivery->id,
+                'new_status' => $delivery->status,
+                'dock_status' => 'Available'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update delivery status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+public function setToDocking(Delivery $delivery)
+{
+    try {
+        // Validate delivery status
+        if ($delivery->status !== 'Pending') {
+            return response()->json([
+                'message' => 'Delivery must be in Pending status to start docking',
+                'current_status' => $delivery->status
+            ], 400);
+        }
+
+        DB::transaction(function () use ($delivery) {
+            // Update delivery status
+            $delivery->update([
+                'status' => 'Docking',
+                'updated_at' => now()
+            ]);
+            
+            // Find dock assignment by vehicle and time
+            $assignment = DockAssignment::where('truck', $delivery->truck)
+                ->where('scheduled_time', $delivery->shipping_date)
+                ->first();
+            
+            if ($assignment) {
+                // Update the associated dock
+                $assignment->dock()->update([
+                    'status' => 'Occupied',
+                    'type' => 'Loading'
+                ]);
+                
+                // Optionally update assignment status if needed
+                $assignment->update(['status' => 'In Progress']);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Delivery status updated to Docking and dock prepared',
+            'delivery_id' => $delivery->id,
+            'new_status' => 'Docking',
+            'dock_status' => 'Occupied',
+            'dock_type' => 'Loading'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to update delivery and dock status',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+        public function getStatus(Delivery $delivery)
+        {
+            try {
+                $status = DB::table('deliveries')
+                    ->where('id', $delivery->id)
+                    ->value('status');
+
+                return response()->json([
+                    'delivery_id' => $delivery->id,
+                    'status' => $status
+                ]);
+
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Failed to get delivery status',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+        }
+
 }

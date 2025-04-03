@@ -54,6 +54,9 @@ Route::apiResource('delivery',DeliveryController::class)->middleware('auth:sanct
 Route::post('delivery-driver', [DeliveryController::class, 'getDeliveriesBasedOnDriver'])->middleware('auth:sanctum');
 Route::get('/deliveries/current-and-future', [DeliveryController::class, 'currentAndFutureDeliveries'])->middleware('auth:sanctum');
 Route::get('delivery/filtered/{deliveryID}', [DeliveryController::class, 'filteredDelivery'])->middleware('auth:sanctum');
+Route::post('/dock-assignments', [DockAssignmentController::class, 'assignDock']);
+Route::patch('/deliveries/{delivery}/start-delivering', [DeliveryController::class, 'startDelivering'])->middleware('auth:sanctum');
+Route::get('/deliveries/{delivery}/status', [DeliveryController::class, 'getStatus'])->middleware('auth:sanctum');
 //Delivery Detail
 Route::apiResource('delivery-detail',DeliveryDetailController::class)->middleware('auth:sanctum');
 //Employee
@@ -87,6 +90,8 @@ Route::apiResource('model',ModellController::class)->middleware('auth:sanctum');
 Route::post('docks/check-availability', [DockController::class, 'checkAvailability'])->middleware('auth:sanctum');
 Route::post('docks/reserve', [DockController::class, 'reserveDock'])->middleware('auth:sanctum');
 Route::post('docks/release', [DockController::class, 'releaseDock'])->middleware('auth:sanctum');
+Route::patch('/docks/{dock}/set-loading', [DockController::class, 'setToLoading'])->middleware('auth:sanctum');
+Route::patch('/deliveries/{delivery}/set-docking', [DeliveryController::class, 'setToDocking'])->middleware('auth:sanctum');
 
 //Derian
 Route::apiResource('box-inventory', BoxInventoryController::class)->middleware('auth:sanctum');
@@ -97,6 +102,7 @@ Route::get('docks/warehouse/{warehouseId}', [DockController::class, 'getByWareho
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 Route::put('/dock-assignments/{truck}', [DockAssignmentController::class, 'update'])->middleware('auth:sanctum');
+Route::get('/docks/reservations/{dockId}', [DockAssignmentController::class, 'dockReservations']);
 
 //Pallets
 Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
