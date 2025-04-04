@@ -150,7 +150,8 @@ class DeliveryController extends Controller
             'company', 
             'origin', 
             'destination',
-            'deliveryDetails.pallet'
+            'deliveryDetails.pallet',
+            'dock'
         ]));
     }
 
@@ -236,7 +237,7 @@ class DeliveryController extends Controller
                     'destination',
                     'deliveryDetails.pallet'
                 ])
-                ->where('status', 'Pending')
+                ->where('status', '!=', 'Delivered')
                 ->where('truck', $driver->truck->id)
                 // Only deliveries for today or future
                 ->where('shipping_date', '>=', $today)
@@ -437,86 +438,92 @@ protected function formatDateTime($dateTime)
     return null;
 }
 
-    public function startDelivering(Delivery $delivery)
-    {
-        try {
-            // Validate current status
-            if ($delivery->status !== Delivery::STATUS_LOADING) {
-                return response()->json([
-                    'message' => 'Delivery must be in Loading status to start delivering',
-                    'current_status' => $delivery->status
-                ], 400);
-            }
-
-            DB::transaction(function () use ($delivery) {
-                // Update delivery status
-                $delivery->update([
-                    'status' => Delivery::STATUS_DELIVERING,
-                    'updated_at' => now()
-                ]);
-                
-                // Free the associated dock
-                if ($delivery->dockAssignment) {
-                    $delivery->dockAssignment->dock()->update(['status' => 'Available']);
-                    $delivery->dockAssignment()->update(['status' => 'Completed']);
-                }
-            });
-
-            return response()->json([
-                'message' => 'Delivery status updated to Delivering and dock released',
-                'delivery_id' => $delivery->id,
-                'new_status' => $delivery->status,
-                'dock_status' => 'Available'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to update delivery status',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-
-public function setToDocking(Delivery $delivery)
+public function startDelivering($delivery)
 {
     try {
-        // Validate delivery status
-        if ($delivery->status !== 'Pending') {
+        $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($delivery);
+
+        if ($delivery->status !== Delivery::STATUS_LOADING) {
+            return response()->json([
+                'message' => 'Delivery must be in Loading status to start delivering',
+                'current_status' => $delivery->status
+            ], 400);
+        }
+
+        DB::transaction(function () use ($delivery) {
+            $delivery->update([
+                'status' => Delivery::STATUS_DELIVERING,
+                'updated_at' => now()
+            ]);
+            
+            if ($delivery->dockAssignment) {
+                if ($delivery->dock) {
+                    $delivery->dock->update([
+                        'status' => 'Available',
+                        'type' => 'Free'
+                    ]);
+                }
+                
+                $delivery->dockAssignment->update([
+                    'status' => 'completed',
+                ]);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Delivery status updated to Delivering and dock released',
+            'delivery_id' => $delivery->id,
+            'new_status' => $delivery->status,
+            'dock_status' => 'Available',
+            'dock_assignment_status' => 'Completed'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to update delivery status',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function setToDocking($delivery)
+{
+    try {
+        $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($delivery);
+
+        if ($delivery->status !== Delivery::STATUS_PENDING) {
             return response()->json([
                 'message' => 'Delivery must be in Pending status to start docking',
                 'current_status' => $delivery->status
             ], 400);
         }
 
+        if (!$delivery->dockAssignment) {
+            return response()->json([
+                'message' => 'No dock assignment found for this delivery',
+            ], 400);
+        }
+
         DB::transaction(function () use ($delivery) {
-            // Update delivery status
             $delivery->update([
-                'status' => 'Docking',
+                'status' => Delivery::STATUS_DOCKING,
                 'updated_at' => now()
             ]);
             
-            // Find dock assignment by vehicle and time
-            $assignment = DockAssignment::where('truck', $delivery->truck)
-                ->where('scheduled_time', $delivery->shipping_date)
-                ->first();
-            
-            if ($assignment) {
-                // Update the associated dock
-                $assignment->dock()->update([
+            if ($delivery->dock) {
+                $delivery->dock->update([
                     'status' => 'Occupied',
                     'type' => 'Loading'
                 ]);
-                
-                // Optionally update assignment status if needed
-                $assignment->update(['status' => 'In Progress']);
             }
+            
+            $delivery->dockAssignment->update(['status' => 'docking']);
         });
 
         return response()->json([
             'message' => 'Delivery status updated to Docking and dock prepared',
             'delivery_id' => $delivery->id,
-            'new_status' => 'Docking',
+            'new_status' => Delivery::STATUS_DOCKING,
             'dock_status' => 'Occupied',
             'dock_type' => 'Loading'
         ]);
@@ -530,24 +537,22 @@ public function setToDocking(Delivery $delivery)
 }
 
 
-        public function getStatus(Delivery $delivery)
-        {
-            try {
-                $status = DB::table('deliveries')
-                    ->where('id', $delivery->id)
-                    ->value('status');
-
-                return response()->json([
-                    'delivery_id' => $delivery->id,
-                    'status' => $status
-                ]);
-
-            } catch (\Exception $e) {
-                return response()->json([
-                    'message' => 'Failed to get delivery status',
-                    'error' => $e->getMessage()
-                ], 500);
-            }
+    public function getStatus($delivery)
+    {
+        try {
+            $delivery = Delivery::findOrFail($delivery);
+            
+            return response()->json([
+                'delivery_id' => $delivery->id,
+                'status' => $delivery->status
+            ]);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to get delivery status',
+                'error' => $e->getMessage()
+            ], 500);
         }
+    }
 
 }

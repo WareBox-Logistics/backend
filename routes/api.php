@@ -30,8 +30,7 @@ use App\Http\Controllers\ModellController;
 use App\Http\Controllers\ParkingLotController;
 use App\Http\Controllers\ProblemController;
 use App\Services\VehicleAvailabilityService;
-use App\Models\Delivery;
-use App\Models\Report;
+use App\Http\Controllers\DeliveryConfirmationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -57,6 +56,7 @@ Route::get('delivery/filtered/{deliveryID}', [DeliveryController::class, 'filter
 Route::post('/dock-assignments', [DockAssignmentController::class, 'assignDock']);
 Route::patch('/deliveries/{delivery}/start-delivering', [DeliveryController::class, 'startDelivering'])->middleware('auth:sanctum');
 Route::get('/deliveries/{delivery}/status', [DeliveryController::class, 'getStatus'])->middleware('auth:sanctum');
+Route::patch('/deliveries/{delivery}/complete', [DockController::class, 'confirmDeliveryArrival'])->middleware('auth:sanctum');
 //Delivery Detail
 Route::apiResource('delivery-detail',DeliveryDetailController::class)->middleware('auth:sanctum');
 //Employee
@@ -90,7 +90,7 @@ Route::apiResource('model',ModellController::class)->middleware('auth:sanctum');
 Route::post('docks/check-availability', [DockController::class, 'checkAvailability'])->middleware('auth:sanctum');
 Route::post('docks/reserve', [DockController::class, 'reserveDock'])->middleware('auth:sanctum');
 Route::post('docks/release', [DockController::class, 'releaseDock'])->middleware('auth:sanctum');
-Route::patch('/docks/{dock}/set-loading', [DockController::class, 'setToLoading'])->middleware('auth:sanctum');
+Route::patch('docks/{id}/set-loading', [DockController::class, 'setToLoading'])->middleware('auth:sanctum');
 Route::patch('/deliveries/{delivery}/set-docking', [DeliveryController::class, 'setToDocking'])->middleware('auth:sanctum');
 
 //Derian
@@ -221,4 +221,12 @@ Route::get('/test-reservation', function(VehicleAvailabilityService $service) {
             'trace' => $e->getTraceAsString()
         ], 500);
     }
+});
+
+Route::middleware('auth:sanctum')->group(function() {
+    Route::post('/deliveries/{delivery}/generate-code', 
+        [DeliveryConfirmationController::class, 'generateCode']);
+        
+    Route::post('/deliveries/confirm-by-code', 
+        [DeliveryConfirmationController::class, 'confirmByCode']);
 });

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\GeneratesDeliveryCode;
+
 
 class Delivery extends Model
 {
-    use HasFactory;
+    use HasFactory, GeneratesDeliveryCode;
 
     protected $table = "delivery";
 
@@ -26,7 +28,11 @@ class Delivery extends Model
         'estimated_arrival',
         'estimated_duration_minutes',
         'completed_date',
-        'route'
+        'route',
+        'confirmation_code',
+        'code_generated_at',
+        'code_expires_at',
+        'code_used_at'
     ];
 
     protected $dates = [
@@ -39,6 +45,9 @@ class Delivery extends Model
         'route' => 'array',
         'shipping_date' => 'datetime',
         'estimated_arrival' => 'datetime',
+        'code_generated_at' => 'datetime',
+        'code_expires_at' => 'datetime',
+        'code_used_at' => 'datetime'
     ];
 
     // Delivery types
@@ -129,9 +138,32 @@ class Delivery extends Model
         }
     }
 
+
     public function dockAssignment()
     {
-        return $this->hasOne(DockAssignment::class);
+        return $this->hasOne(DockAssignment::class, 'delivery_id');
     }
+
+    public function dock()
+    {
+        return $this->hasOneThrough(
+            Dock::class,
+            DockAssignment::class,
+            'delivery_id', 
+            'id',          
+            'id',          
+            'dock'         
+        );
+    }
+
+    public function isClientDelivery(): bool
+{
+    return in_array($this->type, [
+        self::TYPE_WAREHOUSE_TO_LOCATION,  
+        self::TYPE_LOCATION_TO_WAREHOUSE,  
+        self::TYPE_LOCATION_TO_LOCATION    
+    ]);
+}
+
 
 }

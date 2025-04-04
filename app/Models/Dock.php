@@ -25,6 +25,7 @@ class Dock extends Model
 
     const TYPE_LOADING = 'Loading';
     const TYPE_UNLOADING = 'Unloading';
+    const TYPE_FREE = 'Unloading';
 
     public function warehouse()
     {
