@@ -14,6 +14,9 @@ class DeliveryConfirmationController extends Controller
         }
 
         $code = $delivery->generateConfirmationCode();
+
+        $delivery->code_expires_at = now()->addDays(3);
+        $delivery->save();
         
         return response()->json([
             'qr_code' => $code,

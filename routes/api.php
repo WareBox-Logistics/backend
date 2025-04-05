@@ -136,6 +136,16 @@ Route::apiResource('category', CategoryController::class)->middleware('auth:sanc
 Route::apiResource('product', ProductController::class)->middleware('auth:sanctum');
 Route::get('product/company/{company}', [ProductController::class, 'getAllProductsByCompany'])->middleware('auth:sanctum');
 
+
+
+
+//OPTIMIZED
+Route::get('deliveries/all', [DeliveryController::class, 'getAllDeliveriesWithDetails'])->middleware('auth:sanctum');
+Route::get('deliveries/company', [DeliveryController::class, 'getDeliveriesByCompany'])->middleware('auth:sanctum');
+
+
+
+
 Route::post('/proxy/optima', function (Request $request) {
     try {
         $queryParams = http_build_query($request->all());

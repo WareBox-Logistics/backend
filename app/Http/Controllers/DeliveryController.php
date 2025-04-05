@@ -202,6 +202,79 @@ class DeliveryController extends Controller
         return response()->json($deliveries);
     }
 
+    public function getAllDeliveriesWithDetails()
+    {
+        try {
+            $deliveries = Delivery::with([
+                'truck',
+                'trailer',
+                'origin',
+                'destination',
+                'company',
+                'deliveryDetails.pallet.boxInventories.product'
+            ])
+            ->orderBy('shipping_date', 'desc')
+            ->get();
+
+            $deliveries->makeHidden(['route']);
+
+            return response()->json([
+                'message' => 'Deliveries retrieved successfully',
+                'deliveries' => $deliveries
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching deliveries',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDeliveriesByCompany(Request $request)
+    {
+        try {
+            $companyId = $request->input('company_id');
+
+            if (!$companyId) {
+                return response()->json(['message' => 'Company ID is required'], 400);
+            }
+
+            $company = \App\Models\Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Company not found'], 404);
+            }
+
+            $deliveries = Delivery::with([
+                'truck',
+                'trailer',
+                'origin',
+                'destination',
+                'deliveryDetails.pallet.boxInventories.product'
+            ])
+            ->where('company', $company->id)
+            ->orderBy('shipping_date', 'desc')
+            ->get();
+
+            $deliveries->makeHidden(['route']);
+
+            return response()->json([
+                'company' => $company->name,
+                'deliveries' => $deliveries
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching deliveries',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+            return response()->json([
+                'message' => 'Error fetching deliveries',
+                'error' => $e->getMessage()
+            ], 500);
+    }
+
     public function getDeliveriesBasedOnDriver(Request $request)
     {
         try {
