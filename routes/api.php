@@ -144,6 +144,8 @@ Route::get('deliveries/all', [DeliveryController::class, 'getAllDeliveriesWithDe
 Route::get('deliveries/company', [DeliveryController::class, 'getDeliveriesByCompany'])->middleware('auth:sanctum');
 Route::get('pallets/all', [PalletController::class, 'getAllPalletsWithDetails'])->middleware('auth:sanctum');
 Route::get('pallets/company', [PalletController::class, 'getPalletsByCompany'])->middleware('auth:sanctum');
+Route::get('products/all', [ProductController::class, 'getAllProductsWithDetails'])->middleware('auth:sanctum');
+Route::get('products/company', [ProductController::class, 'getProductsWithPalletsAndBoxesByCompany'])->middleware('auth:sanctum');
 
 
 
