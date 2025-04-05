@@ -114,7 +114,64 @@ public function show($id)
          } catch (\Exception $e) {
              return response()->json(['message' => $e->getMessage()], 500);
          }
-     }
+    }
+
+    public function getAllPalletsWithDetails()
+    {
+        try {
+            $pallets = Pallet::with([
+                'warehouse',
+                'company',
+                'boxInventories.product'
+            ])->get();
+
+            return response()->json([
+                'message' => 'Pallets retrieved successfully',
+                'pallets' => $pallets
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching pallets',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPalletsByCompany(Request $request)
+    {
+        try {
+            $companyId = $request->input('company_id');
+
+            if (!$companyId) {
+                return response()->json(['message' => 'Company ID is required'], 400);
+            }
+
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Company not found'], 404);
+            }
+
+            $pallets = Pallet::with([
+                'warehouse',
+                'boxInventories.product'
+            ])
+            ->where('company', $company->id)
+            ->get();
+
+            return response()->json([
+                'company' => $company->name,
+                'pallets' => $pallets
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching pallets',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+     
      public function destroy($id)
 {
     try {
