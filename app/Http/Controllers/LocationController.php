@@ -56,6 +56,35 @@ class LocationController extends Controller
         }
     }
 
+    public function getLocationsByCompany(Request $request)
+    {
+        try {
+            $companyId = $request->input('company_id');
+
+            if (!$companyId) {
+                return response()->json(['message' => 'Company ID is required'], 400);
+            }
+
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Company not found'], 404);
+            }
+
+            $locations = Location::where('company', $companyId)->get();
+
+            return response()->json([
+                'company' => $company->name,
+                'locations' => $locations
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching locations',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function store(Request $request){
         try{
 
