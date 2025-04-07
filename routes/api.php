@@ -140,6 +140,7 @@ Route::get('product/company/{company}', [ProductController::class, 'getAllProduc
 
 
 //OPTIMIZED
+Route::get('companies/all', [CompanyController::class, 'getAllCompaniesWithServices'])->middleware('auth:sanctum');
 Route::get('deliveries/all', [DeliveryController::class, 'getAllDeliveriesWithDetails'])->middleware('auth:sanctum');
 Route::get('deliveries/company', [DeliveryController::class, 'getDeliveriesByCompany'])->middleware('auth:sanctum');
 Route::get('locations/company', [LocationController::class, 'getLocationsByCompany'])->middleware('auth:sanctum');
