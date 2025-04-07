@@ -103,6 +103,8 @@ Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 Route::put('/dock-assignments/{truck}', [DockAssignmentController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/docks/reservations/{dockId}', [DockAssignmentController::class, 'dockReservations']);
+Route::get('/dashboard-stats', [PalletController::class, 'getDashboardStats'])->middleware('auth:sanctum');
+Route::get('/pallets/filter', [PalletController::class, 'getPalletsByFilter'])->middleware('auth:sanctum');
 
 //Pallets
 Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
