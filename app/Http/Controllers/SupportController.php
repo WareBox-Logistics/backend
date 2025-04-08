@@ -73,7 +73,7 @@ class SupportController extends Controller
 
     public function destroy($id){
         try{
-            $support = Support::findOrFaild($id);
+            $support = Support::findOrFail($id);
             $support->delete();
 
             return response()->json([
@@ -86,4 +86,6 @@ class SupportController extends Controller
             ]);
         }
     }
+
+
 }

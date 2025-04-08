@@ -93,6 +93,22 @@ class IssueController extends Controller
             ]);
         }
     }
+    
+    public function issueWithoutSupport(){
+        try{
+            $support = Issue::whereDoesntHave('supports')->get();
+            // $support = Issue::all();
+
+            return response()->json([
+                'issues' => $support
+            ],200);
+        }catch(Exception $e){
+            return response()->json([
+                'error' => 'Error deleting a company',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 
 }
 

@@ -118,8 +118,14 @@ Route::get('report/without-issue', [ReportController::class, 'reportsWithoutIssu
 
 Route::apiResource('report', ReportController::class);
 Route::apiResource('problem', ProblemController::class);
+
+Route::get('issue/without-support', [IssueController::class, 'issueWithoutSupport']);
+
 Route::apiResource('issue', IssueController::class);
+
+
 Route::apiResource('support', SupportController::class);
+
 
 //Parking
 Route::post('/lots/vehicle/location', [LotController::class, 'findVehicleParkingLocation'])->middleware('auth:sanctum');
