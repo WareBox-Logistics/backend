@@ -8,7 +8,7 @@ use App\Models\Pallet;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\Warehouse;
-use App\Models\DockAssignment;
+use App\Models\Dock;
 class PalletController extends Controller
 {
      public function index()
@@ -85,7 +85,7 @@ public function getDashboardStats()
             ->count();
 
         // 4) Docks reservados (asumiendo que 'reserved' en DockAssignment indica un dock reservado)
-        $docksReservados = DockAssignment::where('status', 'reserved')->count();
+        $docksReservados = Dock::where('status', 'Available')->count();
 
         // Retornamos un JSON con los conteos
         return response()->json([
