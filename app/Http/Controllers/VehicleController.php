@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use App\Models\Modell;
 use App\Services\VehicleAvailabilityService;
+use App\Models\Employee;
 
 class VehicleController extends Controller
 {
@@ -205,4 +206,29 @@ public function reserveVehicle(Request $request, VehicleAvailabilityService $ava
 
     return response()->json( $reservation);
 }
+
+public function getDriverVehicle($driverId)
+{
+    // Validate driver exists
+    if (!Employee::where('id', $driverId)->exists()) {
+        return response()->json(['message' => 'Driver not found'], 404);
+    }
+
+    $vehicle = Vehicle::with([
+            'modell.brand', // This loads the model and its related brand
+            'driver',
+            'activeAvailability'
+        ])
+        ->where('driver_id', $driverId)
+               ->first();
+
+    if (!$vehicle) {
+        return response()->json(['message' => 'No vehicle assigned'], 404);
+    }
+
+    return response()->json(
+        $vehicle,
+    );
+}
+
 }

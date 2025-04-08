@@ -26,5 +26,10 @@ class ParkingAssigment extends Model
     public function lot(){
         return $this->belongsTo(Lot::class);
     }
+
+    public function parkingLot()
+{
+    return $this->belongsTo(ParkingLot::class);
+}
   
 }

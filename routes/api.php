@@ -34,6 +34,9 @@ use App\Http\Controllers\DeliveryConfirmationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 
 //E N D P O I N T S
 
@@ -50,6 +53,7 @@ Route::apiResource('role',RoleController::class)->middleware('auth:sanctum');
 Route::apiResource('company',CompanyController::class)->middleware('auth:sanctum');
 //Delivery
 Route::apiResource('delivery',DeliveryController::class)->middleware('auth:sanctum');
+Route::get('/driver/{driverId}/vehicle', [VehicleController::class, 'getDriverVehicle'])->middleware('auth:sanctum');
 Route::post('delivery-driver', [DeliveryController::class, 'getDeliveriesBasedOnDriver'])->middleware('auth:sanctum');
 Route::get('/deliveries/current-and-future', [DeliveryController::class, 'currentAndFutureDeliveries'])->middleware('auth:sanctum');
 Route::get('delivery/filtered/{deliveryID}', [DeliveryController::class, 'filteredDelivery'])->middleware('auth:sanctum');
@@ -239,4 +243,40 @@ Route::middleware('auth:sanctum')->group(function() {
         
     Route::post('/deliveries/confirm-by-code', 
         [DeliveryConfirmationController::class, 'confirmByCode']);
+});
+
+Route::post('/test-notification', function() {
+    $request = request();
+    
+    $request->validate([
+        'fcm_token' => 'required|string',
+        'title' => 'sometimes|string',
+        'body' => 'sometimes|string'
+    ]);
+
+    $token = $request->fcm_token;
+    $title = $request->title ?? 'Test Notification';
+    $body = $request->body ?? 'This is a test notification from your Laravel API';
+
+    try {
+        $factory = (new Factory)
+            ->withServiceAccount(storage_path('app/warebox-86369-firebase-adminsdk-fbsvc-242222a733.json')
+        );
+
+        $messaging = $factory->createMessaging();
+
+        $notification = Notification::create($title, $body);
+
+        $message = CloudMessage::new()
+            ->withNotification($notification)
+            ->withData(['test' => 'true', 'time' => now()->toDateTimeString()])
+            ->toToken($token); // Updated method
+
+        $messaging->send($message);
+
+        return response()->json(['success' => true, 'message' => 'Notification sent']);
+
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+    }
 });

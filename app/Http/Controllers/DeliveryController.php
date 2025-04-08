@@ -16,7 +16,10 @@ use Illuminate\Support\Facades\DB;
 use App\Models\DockAssignment;
 use App\Models\Dock;
 use Carbon\Carbon;
-
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use App\Models\Vehicle;
 
 class DeliveryController extends Controller
 {
@@ -55,6 +58,9 @@ class DeliveryController extends Controller
         }
     
         $validated = $validator->validated();
+
+        $truck = Vehicle::with('driver')->find($validated['truck']);
+        $driver = $truck->driver ?? null;
 
         DB::beginTransaction();
 
@@ -114,9 +120,18 @@ class DeliveryController extends Controller
                 }
             ]);
 
-            // if ($delivery->truck->driver) {
-            //     $this->notifyDriver($delivery);
-            // }
+            // Right before calling notifyDriver()
+            Log::info('Attempting to notify driver', [
+                'delivery_id' => $delivery->id,
+                'truck_id' => $delivery->truck,
+                'has_relationships' => method_exists($delivery, 'truck') // Check if relationship exists
+            ]);
+
+            if ($driver) {
+                $this->notifyDriver($driver, $delivery);
+            } else {
+                Log::warning('No driver assigned to truck', ['truck_id' => $truck->id]);
+            }
 
             DB::commit();
 
@@ -276,59 +291,61 @@ class DeliveryController extends Controller
     }
 
     public function getDeliveriesBasedOnDriver(Request $request)
-    {
-        try {
-            $params = $request->validate([
-                "driverID" => 'required|exists:employee,id'
-            ]);
-    
-            // Get the driver (employee) with their assigned truck
-            $driver = Employee::with('truck')->findOrFail($params['driverID']);
-    
-            if ($driver->role !== 3) {
-                return response()->json([
-                    'message' => 'The specified employee is not a driver',
-                    'data' => []
-                ], 400);
-            }
-    
-            if (!$driver->truck) {
-                return response()->json([
-                    'message' => 'This driver has no assigned vehicle',
-                    'data' => []
-                ], 400);
-            }
-    
-            // Get current date (start of day)
-            $today = now()->startOfDay();
-    
-            $deliveries = Delivery::with([
-                    'truck',
-                    'trailer',
-                    'company',
-                    'origin',
-                    'destination',
-                    'deliveryDetails.pallet'
-                ])
-                ->where('status', '!=', 'Delivered')
-                ->where('truck', $driver->truck->id)
-                // Only deliveries for today or future
-                ->where('shipping_date', '>=', $today)
-                ->orderBy('shipping_date', 'asc') // Order by soonest first
-                ->get();
-    
+{
+    try {
+        $params = $request->validate([
+            "driverID" => 'required|exists:employee,id'
+        ]);
+
+        $driver = Employee::with('truck')->findOrFail($params['driverID']);
+
+        if ($driver->role !== 3) {
             return response()->json([
-                'message' => 'Deliveries retrieved successfully',
-                'data' => $deliveries
-            ]);
-    
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error retrieving deliveries',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'The specified employee is not a driver',
+                'data' => []
+            ], 400);
         }
+
+        if (!$driver->truck) {
+            return response()->json([
+                'message' => 'This driver has no assigned vehicle',
+                'data' => []
+            ], 400);
+        }
+
+        // Adjusted for 7-hour DB offset
+        $today = now()->subHours(7)->startOfDay();
+
+        $query = Delivery::with([
+                'truck',
+                'trailer',
+                'company',
+                'origin',
+                'destination',
+                'deliveryDetails.pallet'
+            ])
+            ->where('truck', $driver->truck->id)
+            ->where('shipping_date', '>=', $today)
+            ->orderBy('shipping_date', 'asc');
+
+        if (!($request->include_delivered ?? false)) {
+            $query->where('status', '!=', Delivery::STATUS_DELIVERED);
+        }
+
+        $deliveries = $query->get();
+
+        return response()->json([
+            'message' => 'Deliveries retrieved successfully',
+            'data' => $deliveries
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error retrieving deliveries',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
 public function currentAndFutureDeliveries()
 {
@@ -342,61 +359,53 @@ public function currentAndFutureDeliveries()
     return response()->json($deliveries);
 }
 
-protected function notifyDriver(Delivery $delivery)
+protected function notifyDriver(Employee $driver, Delivery $delivery)
 {
-    $driver = $delivery->truck->driver;
-    
-    \Illuminate\Support\Facades\Log::debug("Notification initiated for driver", [
-        'driver_id' => $driver->id,
-        'fcm_token_exists' => !empty($driver->fcm_token)
-    ]);
-
-    if (!$driver->fcm_token) {
-        \Illuminate\Support\Facades\Log::warning("No FCM token for driver", ['driver_id' => $driver->id]);
-        return;
-    }
-
     try {
-        $factory = (new \Kreait\Firebase\Factory)
-            ->withServiceAccount(storage_path('app/firebase-service-account.json'));
+        Log::debug("Notification initiated for driver", [
+            'driver_id' => $driver->id,
+            'fcm_token_exists' => !empty($driver->fcm_token)
+        ]);
+
+        if (empty($driver->fcm_token)) {
+            Log::warning("No FCM token for driver", ['driver_id' => $driver->id]);
+            return;
+        }
+
+        $factory = (new Factory)
+            ->withServiceAccount(storage_path('app/warebox-86369-firebase-adminsdk-fbsvc-242222a733.json'));
 
         $messaging = $factory->createMessaging();
 
-        $notification = \Kreait\Firebase\Messaging\Notification::create(
+        $notification = Notification::create(
             'New Delivery Assigned',
             "Delivery #{$delivery->id} - {$delivery->origin->name} to {$delivery->destination->name}"
         );
 
-        $message = \Kreait\Firebase\Messaging\CloudMessage::new()
+        $message = CloudMessage::new()
             ->withNotification($notification)
             ->withData([
                 'delivery_id' => (string)$delivery->id,
                 'type' => 'new_delivery'
             ])
-            ->withTarget('token', $driver->fcm_token);
+            ->toToken($driver->fcm_token);
 
-        \Illuminate\Support\Facades\Log::debug("Attempting to send FCM message", [
-            'token' => $driver->fcm_token,
-            'message' => $message->jsonSerialize()
-        ]);
-
-        $response = $messaging->send($message);
+        $messaging->send($message);
         
-        \Illuminate\Support\Facades\Log::info("FCM message sent successfully", [
-            'driver_id' => $driver->id,
-            'message_id' => $response instanceof \Kreait\Firebase\Messaging\SendReport ? $response->name() : 'unknown'
-        ]);
+        Log::info("FCM message sent successfully", ['driver_id' => $driver->id]);
 
     } catch (\Throwable $e) {
-        \Illuminate\Support\Facades\Log::error("FCM Error", [
+        Log::error("FCM Error", [
             'driver_id' => $driver->id,
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
         
-        if (str_contains($e->getMessage(), '401') || str_contains($e->getMessage(), '404')) {
+        if (str_contains($e->getMessage(), '401') || 
+            str_contains($e->getMessage(), '404') ||
+            str_contains($e->getMessage(), 'registration-token-not-registered')) {
             $driver->update(['fcm_token' => null]);
-            \Illuminate\Support\Facades\Log::warning("Cleared invalid FCM token for driver", ['driver_id' => $driver->id]);
+            Log::warning("Cleared invalid FCM token for driver", ['driver_id' => $driver->id]);
         }
     }
 }
