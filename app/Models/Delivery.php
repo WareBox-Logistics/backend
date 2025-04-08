@@ -165,5 +165,11 @@ class Delivery extends Model
     ]);
 }
 
+public function nextDelivery()
+{
+    return $this->hasOne(Delivery::class, 'truck', 'truck')
+        ->where('shipping_date', '>', $this->shipping_date)
+        ->orderBy('shipping_date');
+}
 
 }

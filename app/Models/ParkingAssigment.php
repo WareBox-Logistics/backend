@@ -9,7 +9,7 @@ class ParkingAssigment extends Model
 {
     use HasFactory;
 
-    protected $table = 'parkingAssigment';
+    protected $table = 'parking_assigments';
 
     protected $fillable = [
         'delivery',
