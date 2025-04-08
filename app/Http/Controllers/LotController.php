@@ -6,7 +6,8 @@ use App\Models\Lot;
 use App\Models\ParkingLot;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class LotController extends Controller
 {
     public function index()
@@ -210,30 +211,47 @@ class LotController extends Controller
     public function freeLot(Request $request)
     {
         try {
-            $fields = $request->validate([
-                'lotID' => 'required|exists:lots,id', 
+            $validated = $request->validate([
+                'lot_id' => 'required|exists:lots,id', // Validate against actual spots table
             ]);
     
-            $lot = Lot::findOrFail($fields['lotID']);
+            $lot = Lot::with('parkingLot')->findOrFail($validated['lot_id']);
     
             if (!$lot->is_occupied) {
                 return response()->json([
-                    'message' => 'The lot is already unoccupied.',
-                ], 400); // Bad request
+                    'message' => 'Parking spot is already free',
+                    'spot_id' => $lot->id,
+                    'parking_lot_id' => $lot->parking_lot_id,
+                    'location' => $lot->parkingLot->name ?? null
+                ], 200);
             }
     
-            $lot->vehicle_id = null;
-            $lot->is_occupied = false;
-            $lot->save();
+            DB::transaction(function () use ($lot) {
+                $lot->update([
+                    'vehicle_id' => null,
+                    'is_occupied' => false,
+                    'updated_at' => now()
+                ]);
+            });
     
             return response()->json([
-                'message' => 'Lot freed successfully.',
-                'lot' => $lot,
-            ], 200);
+                'message' => 'Parking spot freed successfully',
+                'spot_id' => $lot->id,
+                'parking_lot_id' => $lot->parking_lot_id,
+                'location' => $lot->parkingLot->name ?? null,
+                'was_occupied_by' => $lot->vehicle_id
+            ]);
+    
         } catch (\Exception $e) {
+            Log::error('Failed to free parking spot', [
+                'request' => $request->all(),
+                'error' => $e->getMessage()
+            ]);
+    
             return response()->json([
-                'message' => 'Error freeing the lot.',
+                'message' => 'Failed to free parking spot',
                 'error' => $e->getMessage(),
+                'note' => 'Please verify the spot exists in the lots table'
             ], 500);
         }
     }

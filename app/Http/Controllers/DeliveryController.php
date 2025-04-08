@@ -568,84 +568,93 @@ public function startDelivering($delivery)
     }
 }
 
-public function setToDocking($delivery)
+public function setToDocking($deliveryId)
 {
-    try {
-        $delivery = Delivery::with([
-            'dockAssignment', 
-            'dock',
-            'truck.currentParkingLot',  // Truck's parking
-            'trailer.currentParkingLot' // Trailer's parking
-        ])->findOrFail($delivery);
+    Log::channel('delivery')->info('Starting setToDocking', ['delivery_id' => $deliveryId]);
 
+    try {
+        // Load delivery with relationships
+        $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($deliveryId);
+        Log::channel('delivery')->debug('Delivery loaded', [
+            'delivery_id' => $delivery->id,
+            'current_status' => $delivery->status,
+            'has_dock_assignment' => !is_null($delivery->dockAssignment),
+            'has_dock' => !is_null($delivery->dock)
+        ]);
+
+        // Validate status
         if ($delivery->status !== Delivery::STATUS_PENDING) {
+            Log::channel('delivery')->warning('Invalid status for docking', [
+                'current_status' => $delivery->status,
+                'required_status' => Delivery::STATUS_PENDING
+            ]);
             return response()->json([
                 'message' => 'Delivery must be in Pending status to start docking',
                 'current_status' => $delivery->status
             ], 400);
         }
 
+        // Validate dock assignment
         if (!$delivery->dockAssignment) {
+            Log::channel('delivery')->error('No dock assignment found');
             return response()->json([
                 'message' => 'No dock assignment found for this delivery',
             ], 400);
         }
 
         DB::transaction(function () use ($delivery) {
-            // Free truck's parking lot if exists
-            if ($delivery->truck && $delivery->truck->currentParkingLot) {
-                $truckLot = $delivery->truck->currentParkingLot;
-                $truckLot->update([
-                    'vehicle_id' => null,
-                    'is_occupied' => false,
-                    'updated_at' => now()
-                ]);
-            }
-
-            // Free trailer's parking lot if exists
-            if ($delivery->trailer && $delivery->trailer->currentParkingLot) {
-                $trailerLot = $delivery->trailer->currentParkingLot;
-                $trailerLot->update([
-                    'vehicle_id' => null,
-                    'is_occupied' => false,
-                    'updated_at' => now()
-                ]);
-            }
-
+            Log::channel('delivery')->info('Starting transaction');
+            
             // Update delivery status
             $delivery->update([
                 'status' => Delivery::STATUS_DOCKING,
                 'updated_at' => now()
             ]);
-            
+            Log::channel('delivery')->debug('Delivery status updated to DOCKING');
+
             // Update dock status
             if ($delivery->dock) {
                 $delivery->dock->update([
                     'status' => 'Occupied',
                     'type' => 'Loading'
                 ]);
+                Log::channel('delivery')->debug('Dock status updated', [
+                    'dock_id' => $delivery->dock->id,
+                    'new_status' => 'Occupied'
+                ]);
+            } else {
+                Log::channel('delivery')->warning('No dock associated with delivery');
             }
-            
+
             // Update dock assignment
             $delivery->dockAssignment->update(['status' => 'docking']);
+            Log::channel('delivery')->debug('Dock assignment updated', [
+                'assignment_id' => $delivery->dockAssignment->id,
+                'new_status' => 'docking'
+            ]);
         });
 
+        Log::channel('delivery')->info('Docking process completed successfully');
         return response()->json([
-            'message' => 'Delivery status updated to Docking and parking lots freed',
+            'message' => 'Delivery status updated to Docking and dock prepared',
             'delivery_id' => $delivery->id,
             'new_status' => Delivery::STATUS_DOCKING,
             'dock_status' => 'Occupied',
-            'dock_type' => 'Loading',
-            'freed_parking_lots' => [
-                'truck' => $delivery->truck->currentParkingLot->id ?? null,
-                'trailer' => $delivery->trailer->currentParkingLot->id ?? null
-            ]
+            'dock_type' => 'Loading'
         ]);
 
     } catch (\Exception $e) {
+        Log::channel('delivery')->error('Docking process failed', [
+            'delivery_id' => $deliveryId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'trigger_notes' => 'Check if database trigger is interfering with transaction'
+        ]);
+        
         return response()->json([
-            'message' => 'Failed to update delivery status',
-            'error' => $e->getMessage()
+            'message' => 'Failed to update delivery and dock status',
+            'error' => $e->getMessage(),
+            'debug_tip' => 'Check application logs for detailed error information'
         ], 500);
     }
 }
