@@ -107,7 +107,9 @@ Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 Route::put('/dock-assignments/{truck}', [DockAssignmentController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/docks/reservations/{dockId}', [DockAssignmentController::class, 'dockReservations']);
-
+Route::get('/dashboard-stats', [PalletController::class, 'getDashboardStats'])->middleware('auth:sanctum');
+Route::get('/pallets/filter', [PalletController::class, 'getPalletsByFilter'])->middleware('auth:sanctum');
+Route::get('/docks/filter', [DockController::class, 'getDocksByFilter'])->middleware('auth:sanctum');
 //Pallets
 Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
 
@@ -120,8 +122,14 @@ Route::get('report/without-issue', [ReportController::class, 'reportsWithoutIssu
 
 Route::apiResource('report', ReportController::class);
 Route::apiResource('problem', ProblemController::class);
+
+Route::get('issue/without-support', [IssueController::class, 'issueWithoutSupport']);
+
 Route::apiResource('issue', IssueController::class);
+
+
 Route::apiResource('support', SupportController::class);
+
 
 //Parking
 Route::post('/lots/vehicle/location', [LotController::class, 'findVehicleParkingLocation'])->middleware('auth:sanctum');
@@ -144,8 +152,14 @@ Route::get('product/company/{company}', [ProductController::class, 'getAllProduc
 
 
 //OPTIMIZED
+Route::get('companies/all', [CompanyController::class, 'getAllCompaniesWithServices'])->middleware('auth:sanctum');
 Route::get('deliveries/all', [DeliveryController::class, 'getAllDeliveriesWithDetails'])->middleware('auth:sanctum');
 Route::get('deliveries/company', [DeliveryController::class, 'getDeliveriesByCompany'])->middleware('auth:sanctum');
+Route::get('locations/company', [LocationController::class, 'getLocationsByCompany'])->middleware('auth:sanctum');
+Route::get('pallets/all', [PalletController::class, 'getAllPalletsWithDetails'])->middleware('auth:sanctum');
+Route::get('pallets/company', [PalletController::class, 'getPalletsByCompany'])->middleware('auth:sanctum');
+Route::get('products/all', [ProductController::class, 'getAllProductsWithDetails'])->middleware('auth:sanctum');
+Route::get('products/company', [ProductController::class, 'getProductsWithPalletsAndBoxesByCompany'])->middleware('auth:sanctum');
 
 
 

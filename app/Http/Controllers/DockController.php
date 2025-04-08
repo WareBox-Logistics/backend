@@ -295,4 +295,32 @@ public function releaseDock(Request $request)
             ], 500);
         }
     }
+
+    public function getDocksByFilter(Request $request)
+{
+    try {
+        $status = $request->input('status'); // p. ej. "Available", "Occupied", ...
+
+        // Armamos la query
+        $query = Dock::with('warehouse');
+
+        if (!is_null($status)) {
+            $query->where('status', $status);
+        }
+
+        $docks = $query->get();
+
+        return response()->json([
+            'message' => 'Filtered docks retrieved successfully',
+            'docks'   => $docks
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error fetching filtered docks',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
 }
+}
+
+

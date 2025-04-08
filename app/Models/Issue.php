@@ -28,6 +28,6 @@ class Issue extends Model
     }
 
     public function supports(){
-        return $this->hasMany(Support::class);
+        return $this->hasMany(Support::class,'issue');
     }
 }
