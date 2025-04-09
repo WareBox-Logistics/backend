@@ -13,15 +13,21 @@ use Illuminate\Support\Facades\Log;
 use App\Services\VehicleAvailabilityService;
 use App\Models\Pallet;
 use Illuminate\Support\Facades\DB;
-
-
+use App\Models\DockAssignment;
+use App\Models\Dock;
+use Carbon\Carbon;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
+use App\Models\Vehicle;
 
 class DeliveryController extends Controller
 {
     public function index()
     {
         $deliveries = Delivery::with(['truck', 'trailer', 'company', 'origin', 'destination'])
-            ->orderBy('shipping_date', 'desc');
+            ->orderBy('shipping_date', 'desc')
+            ->paginate(200);
 
         return response()->json($deliveries);
     }
@@ -52,6 +58,9 @@ class DeliveryController extends Controller
         }
     
         $validated = $validator->validated();
+
+        $truck = Vehicle::with('driver')->find($validated['truck']);
+        $driver = $truck->driver ?? null;
 
         DB::beginTransaction();
 
@@ -111,8 +120,17 @@ class DeliveryController extends Controller
                 }
             ]);
 
-            if ($delivery->truck->driver) {
-                $this->notifyDriver($delivery);
+            // Right before calling notifyDriver()
+            Log::info('Attempting to notify driver', [
+                'delivery_id' => $delivery->id,
+                'truck_id' => $delivery->truck,
+                'has_relationships' => method_exists($delivery, 'truck') // Check if relationship exists
+            ]);
+
+            if ($driver) {
+                $this->notifyDriver($driver, $delivery);
+            } else {
+                Log::warning('No driver assigned to truck', ['truck_id' => $truck->id]);
             }
 
             DB::commit();
@@ -147,7 +165,8 @@ class DeliveryController extends Controller
             'company', 
             'origin', 
             'destination',
-            'deliveryDetails.pallet'
+            'deliveryDetails.pallet',
+            'dock'
         ]));
     }
 
@@ -198,60 +217,135 @@ class DeliveryController extends Controller
         return response()->json($deliveries);
     }
 
-    public function getDeliveriesBasedOnDriver(Request $request)
+    public function getAllDeliveriesWithDetails()
     {
         try {
-            $params = $request->validate([
-                "driverID" => 'required|exists:employee,id'
-            ]);
-    
-            // Get the driver (employee) with their assigned truck
-            $driver = Employee::with('truck')->findOrFail($params['driverID']);
-    
-            if ($driver->role !== 3) {
-                return response()->json([
-                    'message' => 'The specified employee is not a driver',
-                    'data' => []
-                ], 400);
-            }
-    
-            if (!$driver->truck) {
-                return response()->json([
-                    'message' => 'This driver has no assigned vehicle',
-                    'data' => []
-                ], 400);
-            }
-    
-            // Get current date (start of day)
-            $today = now()->startOfDay();
-    
             $deliveries = Delivery::with([
-                    'truck',
-                    'trailer',
-                    'company',
-                    'origin',
-                    'destination',
-                    'deliveryDetails.pallet'
-                ])
-                ->where('status', 'Pending')
-                ->where('truck', $driver->truck->id)
-                // Only deliveries for today or future
-                ->where('shipping_date', '>=', $today)
-                ->orderBy('shipping_date', 'asc') // Order by soonest first
-                ->get();
-    
+                'truck',
+                'trailer',
+                'origin',
+                'destination',
+                'company',
+                'deliveryDetails.pallet.boxInventories.product'
+            ])
+            ->orderBy('shipping_date', 'desc')
+            ->get();
+
+            $deliveries->makeHidden(['route']);
+
             return response()->json([
                 'message' => 'Deliveries retrieved successfully',
-                'data' => $deliveries
+                'deliveries' => $deliveries
             ]);
-    
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Error retrieving deliveries',
+                'message' => 'Error fetching deliveries',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
+
+    public function getDeliveriesByCompany(Request $request)
+    {
+        try {
+            $companyId = $request->input('company_id');
+
+            if (!$companyId) {
+                return response()->json(['message' => 'Company ID is required'], 400);
+            }
+
+            $company = \App\Models\Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Company not found'], 404);
+            }
+
+            $deliveries = Delivery::with([
+                'truck',
+                'trailer',
+                'origin',
+                'destination',
+                'deliveryDetails.pallet.boxInventories.product'
+            ])
+            ->where('company', $company->id)
+            ->orderBy('shipping_date', 'desc')
+            ->get();
+
+            $deliveries->makeHidden(['route']);
+
+            return response()->json([
+                'company' => $company->name,
+                'deliveries' => $deliveries
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching deliveries',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+            return response()->json([
+                'message' => 'Error fetching deliveries',
+                'error' => $e->getMessage()
+            ], 500);
+    }
+
+    public function getDeliveriesBasedOnDriver(Request $request)
+{
+    try {
+        $params = $request->validate([
+            "driverID" => 'required|exists:employee,id'
+        ]);
+
+        $driver = Employee::with('truck')->findOrFail($params['driverID']);
+
+        if ($driver->role !== 3) {
+            return response()->json([
+                'message' => 'The specified employee is not a driver',
+                'data' => []
+            ], 400);
+        }
+
+        if (!$driver->truck) {
+            return response()->json([
+                'message' => 'This driver has no assigned vehicle',
+                'data' => []
+            ], 400);
+        }
+
+        // Adjusted for 7-hour DB offset
+        $today = now()->subHours(7)->startOfDay();
+
+        $query = Delivery::with([
+                'truck',
+                'trailer',
+                'company',
+                'origin',
+                'destination',
+                'deliveryDetails.pallet'
+            ])
+            ->where('truck', $driver->truck->id)
+            ->where('shipping_date', '>=', $today)
+            ->orderBy('shipping_date', 'asc');
+
+        if (!($request->include_delivered ?? false)) {
+            $query->where('status', '!=', Delivery::STATUS_DELIVERED);
+        }
+
+        $deliveries = $query->get();
+
+        return response()->json([
+            'message' => 'Deliveries retrieved successfully',
+            'data' => $deliveries
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error retrieving deliveries',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 
 public function currentAndFutureDeliveries()
 {
@@ -265,61 +359,53 @@ public function currentAndFutureDeliveries()
     return response()->json($deliveries);
 }
 
-protected function notifyDriver(Delivery $delivery)
+protected function notifyDriver(Employee $driver, Delivery $delivery)
 {
-    $driver = $delivery->truck->driver;
-    
-    \Illuminate\Support\Facades\Log::debug("Notification initiated for driver", [
-        'driver_id' => $driver->id,
-        'fcm_token_exists' => !empty($driver->fcm_token)
-    ]);
-
-    if (!$driver->fcm_token) {
-        \Illuminate\Support\Facades\Log::warning("No FCM token for driver", ['driver_id' => $driver->id]);
-        return;
-    }
-
     try {
-        $factory = (new \Kreait\Firebase\Factory)
-            ->withServiceAccount(storage_path('app/firebase-service-account.json'));
+        Log::debug("Notification initiated for driver", [
+            'driver_id' => $driver->id,
+            'fcm_token_exists' => !empty($driver->fcm_token)
+        ]);
+
+        if (empty($driver->fcm_token)) {
+            Log::warning("No FCM token for driver", ['driver_id' => $driver->id]);
+            return;
+        }
+
+        $factory = (new Factory)
+            ->withServiceAccount(storage_path('app/warebox-86369-firebase-adminsdk-fbsvc-242222a733.json'));
 
         $messaging = $factory->createMessaging();
 
-        $notification = \Kreait\Firebase\Messaging\Notification::create(
+        $notification = Notification::create(
             'New Delivery Assigned',
             "Delivery #{$delivery->id} - {$delivery->origin->name} to {$delivery->destination->name}"
         );
 
-        $message = \Kreait\Firebase\Messaging\CloudMessage::new()
+        $message = CloudMessage::new()
             ->withNotification($notification)
             ->withData([
                 'delivery_id' => (string)$delivery->id,
                 'type' => 'new_delivery'
             ])
-            ->withTarget('token', $driver->fcm_token);
+            ->toToken($driver->fcm_token);
 
-        \Illuminate\Support\Facades\Log::debug("Attempting to send FCM message", [
-            'token' => $driver->fcm_token,
-            'message' => $message->jsonSerialize()
-        ]);
-
-        $response = $messaging->send($message);
+        $messaging->send($message);
         
-        \Illuminate\Support\Facades\Log::info("FCM message sent successfully", [
-            'driver_id' => $driver->id,
-            'message_id' => $response instanceof \Kreait\Firebase\Messaging\SendReport ? $response->name() : 'unknown'
-        ]);
+        Log::info("FCM message sent successfully", ['driver_id' => $driver->id]);
 
     } catch (\Throwable $e) {
-        \Illuminate\Support\Facades\Log::error("FCM Error", [
+        Log::error("FCM Error", [
             'driver_id' => $driver->id,
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
         
-        if (str_contains($e->getMessage(), '401') || str_contains($e->getMessage(), '404')) {
+        if (str_contains($e->getMessage(), '401') || 
+            str_contains($e->getMessage(), '404') ||
+            str_contains($e->getMessage(), 'registration-token-not-registered')) {
             $driver->update(['fcm_token' => null]);
-            \Illuminate\Support\Facades\Log::warning("Cleared invalid FCM token for driver", ['driver_id' => $driver->id]);
+            Log::warning("Cleared invalid FCM token for driver", ['driver_id' => $driver->id]);
         }
     }
 }
@@ -372,4 +458,223 @@ public function filteredDelivery($id)
 
     return response()->json($response);
 }
+
+
+
+public function getDockAssignment($deliveryId)
+{
+    try {
+        $delivery = Delivery::findOrFail($deliveryId);
+        
+        $assignment = DockAssignment::with(['dock.warehouse'])
+            ->where('truck', $delivery->truck)
+            ->where('scheduled_time', '>=', now())
+            ->first();
+
+        if (!$assignment) {
+            return response()->json(['message' => 'No dock assignment found'], 404);
+        }
+
+        $dockData = is_int($assignment->dock) 
+            ? Dock::with('warehouse')->find($assignment->dock)
+            : $assignment->dock;
+
+        return response()->json([
+            'delivery_id' => $delivery->id,
+            'truck_id' => $delivery->truck,
+            'dock' => [
+                'id' => $dockData->id,
+                'number' => $dockData->number,
+                'warehouse' => optional($dockData->warehouse)->name
+            ],
+            'scheduled_time' => $this->formatDateTime($assignment->scheduled_time),
+            'status' => $assignment->status
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error retrieving dock assignment',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+protected function formatDateTime($dateTime)
+{
+    if (is_string($dateTime)) {
+        try {
+            return Carbon::parse($dateTime)->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            Log::error('Failed to parse date string', [
+                'date' => $dateTime,
+                'error' => $e->getMessage()
+            ]);
+            return $dateTime; 
+        }
+    }
+    
+    if ($dateTime instanceof \Carbon\Carbon) {
+        return $dateTime->format('Y-m-d H:i:s');
+    }
+    
+    return null;
+}
+
+public function startDelivering($delivery)
+{
+    try {
+        $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($delivery);
+
+        if ($delivery->status !== Delivery::STATUS_LOADING) {
+            return response()->json([
+                'message' => 'Delivery must be in Loading status to start delivering',
+                'current_status' => $delivery->status
+            ], 400);
+        }
+
+        DB::transaction(function () use ($delivery) {
+            $delivery->update([
+                'status' => Delivery::STATUS_DELIVERING,
+                'updated_at' => now()
+            ]);
+            
+            if ($delivery->dockAssignment) {
+                if ($delivery->dock) {
+                    $delivery->dock->update([
+                        'status' => 'Available',
+                        'type' => 'Free'
+                    ]);
+                }
+                
+                $delivery->dockAssignment->update([
+                    'status' => 'completed',
+                ]);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Delivery status updated to Delivering and dock released',
+            'delivery_id' => $delivery->id,
+            'new_status' => $delivery->status,
+            'dock_status' => 'Available',
+            'dock_assignment_status' => 'Completed'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to update delivery status',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function setToDocking($deliveryId)
+{
+    Log::channel('delivery')->info('Starting setToDocking', ['delivery_id' => $deliveryId]);
+
+    try {
+        // Load delivery with relationships
+        $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($deliveryId);
+        Log::channel('delivery')->debug('Delivery loaded', [
+            'delivery_id' => $delivery->id,
+            'current_status' => $delivery->status,
+            'has_dock_assignment' => !is_null($delivery->dockAssignment),
+            'has_dock' => !is_null($delivery->dock)
+        ]);
+
+        // Validate status
+        if ($delivery->status !== Delivery::STATUS_PENDING) {
+            Log::channel('delivery')->warning('Invalid status for docking', [
+                'current_status' => $delivery->status,
+                'required_status' => Delivery::STATUS_PENDING
+            ]);
+            return response()->json([
+                'message' => 'Delivery must be in Pending status to start docking',
+                'current_status' => $delivery->status
+            ], 400);
+        }
+
+        // Validate dock assignment
+        if (!$delivery->dockAssignment) {
+            Log::channel('delivery')->error('No dock assignment found');
+            return response()->json([
+                'message' => 'No dock assignment found for this delivery',
+            ], 400);
+        }
+
+        DB::transaction(function () use ($delivery) {
+            Log::channel('delivery')->info('Starting transaction');
+            
+            // Update delivery status
+            $delivery->update([
+                'status' => Delivery::STATUS_DOCKING,
+                'updated_at' => now()
+            ]);
+            Log::channel('delivery')->debug('Delivery status updated to DOCKING');
+
+            // Update dock status
+            if ($delivery->dock) {
+                $delivery->dock->update([
+                    'status' => 'Occupied',
+                    'type' => 'Loading'
+                ]);
+                Log::channel('delivery')->debug('Dock status updated', [
+                    'dock_id' => $delivery->dock->id,
+                    'new_status' => 'Occupied'
+                ]);
+            } else {
+                Log::channel('delivery')->warning('No dock associated with delivery');
+            }
+
+            // Update dock assignment
+            $delivery->dockAssignment->update(['status' => 'docking']);
+            Log::channel('delivery')->debug('Dock assignment updated', [
+                'assignment_id' => $delivery->dockAssignment->id,
+                'new_status' => 'docking'
+            ]);
+        });
+
+        Log::channel('delivery')->info('Docking process completed successfully');
+        return response()->json([
+            'message' => 'Delivery status updated to Docking and dock prepared',
+            'delivery_id' => $delivery->id,
+            'new_status' => Delivery::STATUS_DOCKING,
+            'dock_status' => 'Occupied',
+            'dock_type' => 'Loading'
+        ]);
+
+    } catch (\Exception $e) {
+        Log::channel('delivery')->error('Docking process failed', [
+            'delivery_id' => $deliveryId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'trigger_notes' => 'Check if database trigger is interfering with transaction'
+        ]);
+        
+        return response()->json([
+            'message' => 'Failed to update delivery and dock status',
+            'error' => $e->getMessage(),
+            'debug_tip' => 'Check application logs for detailed error information'
+        ], 500);
+    }
+}
+
+    public function getStatus($delivery)
+    {
+        try {
+            $delivery = Delivery::findOrFail($delivery);
+            
+            return response()->json([
+                'delivery_id' => $delivery->id,
+                'status' => $delivery->status
+            ]);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to get delivery status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

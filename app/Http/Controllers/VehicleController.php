@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use App\Models\Modell;
 use App\Services\VehicleAvailabilityService;
+use App\Models\Employee;
+use Illuminate\Support\Facades\Log;
 
 class VehicleController extends Controller
 {
@@ -169,21 +171,32 @@ class VehicleController extends Controller
     }
 
     public function available(Request $request, VehicleAvailabilityService $availabilityService)
-{
-    $request->validate([
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after:start_date',
-        'type' => 'nullable|in:truck,trailer'
-    ]);
-
-    $vehicles = $availabilityService->getAvailableVehicles(
-        $request->start_date,
-        $request->end_date,
-        $request->type
-    );
-
-    return response()->json(['vehicles' => $vehicles]);
-}
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'type' => 'nullable|in:truck,trailer',
+            'origin_id' => 'nullable|integer',
+            'origin_type' => 'nullable|string|in:warehouse,location' // Simplified
+        ]);
+    
+        $origin = null;
+        if ($request->origin_id && $request->origin_type) {
+            $modelClass = $request->origin_type === 'warehouse' 
+                ? 'App\\Models\\Warehouse' 
+                : 'App\\Models\\Location';
+            $origin = $modelClass::find($request->origin_id);
+        }
+    
+        $vehicles = $availabilityService->getAvailableVehicles(
+            $request->start_date,
+            $request->end_date,
+            $request->type,
+            $origin
+        );
+    
+        return response()->json(['vehicles' => $vehicles]);
+    }
 
 public function reserveVehicle(Request $request, VehicleAvailabilityService $availabilityService)
 {
@@ -205,4 +218,29 @@ public function reserveVehicle(Request $request, VehicleAvailabilityService $ava
 
     return response()->json( $reservation);
 }
+
+public function getDriverVehicle($driverId)
+{
+    // Validate driver exists
+    if (!Employee::where('id', $driverId)->exists()) {
+        return response()->json(['message' => 'Driver not found'], 404);
+    }
+
+    $vehicle = Vehicle::with([
+            'modell.brand', // This loads the model and its related brand
+            'driver',
+            'activeAvailability'
+        ])
+        ->where('driver_id', $driverId)
+               ->first();
+
+    if (!$vehicle) {
+        return response()->json(['message' => 'No vehicle assigned'], 404);
+    }
+
+    return response()->json(
+        $vehicle,
+    );
+}
+
 }

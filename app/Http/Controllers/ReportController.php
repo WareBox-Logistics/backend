@@ -34,8 +34,8 @@ class ReportController extends Controller
     public function store(Request $request){
         try{
             $validatedData = $request->validate([
-                'latitude' => 'required|string',
-                'longitude' => 'required|string',
+                'latitude' => 'required|',
+                'longitude' => 'required|',
                 'problem' => 'required|exists:problem,id',
                 'issue' => 'required|boolean',
                 'description' => 'required|string',
@@ -54,8 +54,8 @@ class ReportController extends Controller
             $report = Report::findOrFail($id);
 
             $fields = $request->validate([
-                'latitude' => 'required|string',
-                'longitude' => 'required|string',
+                'latitude' => 'required|',
+                'longitude' => 'required|',
                 'problem' => 'required|exists:problem,id',
                 'issue' => 'required|boolean',
                 'description' => 'required|string',
@@ -88,6 +88,21 @@ class ReportController extends Controller
                 'error' => 'Error deleting a company',
                 'message' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function reportsWithoutIssue(){
+        try {
+            $reports =  Report::whereDoesntHave('issues')->get();
+
+            return response()->json([
+                'reports' => $reports
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Error deleting a company',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 }

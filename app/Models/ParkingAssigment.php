@@ -9,7 +9,7 @@ class ParkingAssigment extends Model
 {
     use HasFactory;
 
-    protected $table = 'parkingAssigment';
+    protected $table = 'parking_assigments';
 
     protected $fillable = [
         'delivery',
@@ -26,5 +26,10 @@ class ParkingAssigment extends Model
     public function lot(){
         return $this->belongsTo(Lot::class);
     }
+
+    public function parkingLot()
+{
+    return $this->belongsTo(ParkingLot::class);
+}
   
 }

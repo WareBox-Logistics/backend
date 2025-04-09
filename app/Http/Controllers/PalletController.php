@@ -8,7 +8,7 @@ use App\Models\Pallet;
 use App\Models\Company;
 use App\Models\Product;
 use App\Models\Warehouse;
-
+use App\Models\Dock;
 class PalletController extends Controller
 {
      public function index()
@@ -67,8 +67,80 @@ public function show($id)
         return response()->json(['message' => $e->getMessage()], 500);
     }
 }
+public function getDashboardStats()
+{
+    try {
+        // 1) Pallets sin verificar
+        $palletsSinVerificar = Pallet::where('status', 'Created')
+            ->where('verified', false)
+            ->count();
 
- 
+        // 2) Pallets listos para almacenar
+        $palletsPorAlmacenar = Pallet::where('status', 'Created')
+            ->where('verified', true)
+            ->count();
+
+        // 3) Pallets almacenados
+        $palletsAlmacenados = Pallet::where('status', 'Stored')
+            ->count();
+
+        // 4) Docks reservados (asumiendo que 'reserved' en DockAssignment indica un dock reservado)
+        $docksReservados = Dock::where('status', 'Available')->count();
+
+        // Retornamos un JSON con los conteos
+        return response()->json([
+            'palletsSinVerificar' => $palletsSinVerificar,
+            'palletsPorAlmacenar' => $palletsPorAlmacenar,
+            'palletsAlmacenados'  => $palletsAlmacenados,
+            'docksReservados'     => $docksReservados,
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error getting dashboard stats',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function getPalletsByFilter(Request $request)
+{
+    try {
+        // Leemos los query params ?status=Created&verified=false, etc.
+        $status = $request->input('status');    // "Created" / "Stored" / "In Transit" ...
+        $verified = $request->input('verified'); // "true" / "false"
+
+        // Armamos una query con las relaciones que necesites
+        // Por ejemplo: 'warehouse', 'company' y la relación 'boxInventories.product'
+        $query = Pallet::with(['warehouse', 'company', 'boxInventories.product']);
+
+        // Si llega "status", filtramos
+        if (!is_null($status)) {
+            $query->where('status', $status);
+        }
+
+        // Si llega "verified", lo convertimos a boolean
+        if (!is_null($verified)) {
+            // convierte "true" / "false" en bool real
+            $verifiedBool = filter_var($verified, FILTER_VALIDATE_BOOLEAN);
+            $query->where('verified', $verifiedBool);
+        }
+
+        // Obtenemos los pallets que cumplan con las condiciones
+        $pallets = $query->get();
+
+        return response()->json([
+            'message' => 'Filtered pallets retrieved successfully',
+            'pallets' => $pallets
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error fetching filtered pallets',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
      public function store(Request $request)
      {
         try{
@@ -114,7 +186,64 @@ public function show($id)
          } catch (\Exception $e) {
              return response()->json(['message' => $e->getMessage()], 500);
          }
-     }
+    }
+
+    public function getAllPalletsWithDetails()
+    {
+        try {
+            $pallets = Pallet::with([
+                'warehouse',
+                'company',
+                'boxInventories.product'
+            ])->get();
+
+            return response()->json([
+                'message' => 'Pallets retrieved successfully',
+                'pallets' => $pallets
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching pallets',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPalletsByCompany(Request $request)
+    {
+        try {
+            $companyId = $request->input('company_id');
+
+            if (!$companyId) {
+                return response()->json(['message' => 'Company ID is required'], 400);
+            }
+
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Company not found'], 404);
+            }
+
+            $pallets = Pallet::with([
+                'warehouse',
+                'boxInventories.product'
+            ])
+            ->where('company', $company->id)
+            ->get();
+
+            return response()->json([
+                'company' => $company->name,
+                'pallets' => $pallets
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching pallets',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+     
      public function destroy($id)
 {
     try {

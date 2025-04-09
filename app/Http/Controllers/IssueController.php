@@ -11,9 +11,11 @@ class IssueController extends Controller
 {
     public function index(){
         try{
+
+            $issue = Issue::with('operator')->get();
             return response()->json(
                 [
-                    'data' => Issue::all()
+                    'issues' => $issue
                 ]
             );
         }catch(Exception $e){
@@ -35,21 +37,78 @@ class IssueController extends Controller
     public function store(Request $request){
         try{
             $validatedData = $request->validate([
-                'status' => 'required|string|in:WIP,DONE,WAIT',
-                'description' => 'required|string',
-                'report' => 'required|exists:report,id',
-                'operator' => 'required|esists:employee,id',
+                'status' => 'required|',
+                'description' => 'required|',
+                'report' => 'required|',
+                'operator' => 'required|',
                 'support' => 'required|boolean',
             ]);
 
             return response()->json([
-                'data' => Issue::create($validatedData)
+                'issues' => Issue::create($validatedData)
             ]);
         }catch(Exception $e){
             return response()->json($e);
         }
     }
 
+    public function update(Request $request, $id){
+        try{
+            $issue = Issue::findOrFail($id);
+
+            $fields = $request->validate([
+                'status' => 'required|string|in:WIP,DONE,WAIT',
+                'description' => 'required|string',
+                'report' => 'required|exists:report,id',
+                'operator' => 'required|exists:employee,id',
+                'support' => 'required|boolean',
+            ]);
+            $issue->update($fields);
+
+            return response()->json([
+                'issues'=> $issue
+            ], 200);
+
+        }catch(Exception $e){
+            return response()->json([
+                'error' => 'Error updating a report',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function destroy($id){
+        try{
+            $issue = Issue::findOrFail($id);
+            $issue->delete();
+
+            return response()->json([
+                'issues' => $issue
+            ], 200);
+
+        }catch(Exception $e){
+            return response()->json([
+                'error' => 'Error deleting a company',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function issueWithoutSupport(){
+        try{
+            $support = Issue::whereDoesntHave('supports')->get();
+            // $support = Issue::all();
+
+            return response()->json([
+                'issues' => $support
+            ],200);
+        }catch(Exception $e){
+            return response()->json([
+                'error' => 'Error deleting a company',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 
 }
 

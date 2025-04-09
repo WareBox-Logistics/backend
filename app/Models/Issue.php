@@ -20,14 +20,14 @@ class Issue extends Model
     ];  
 
     public function report(){
-        return $this->belongsTo(Report::class);
+        return $this->belongsTo(Report::class, 'report');
     }
 
     public function operator(){
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'operator');
     }
 
     public function supports(){
-        return $this->hasMany(Support::class);
+        return $this->hasMany(Support::class,'issue');
     }
 }

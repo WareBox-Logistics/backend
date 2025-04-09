@@ -73,6 +73,7 @@ class AuthController extends Controller
             $token = $user->createToken($user->email);
             $roleName = Role::find($user->role);
             $user->role=$roleName->name;
+            $user['roleID']=$roleName->id;
     
             return response()->json([
                 'user' => $user,

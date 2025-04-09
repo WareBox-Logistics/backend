@@ -18,6 +18,15 @@ class Dock extends Model
         'number'
     ];
 
+    const STATUS_AVAILABLE = 'Available';
+    const STATUS_OCCUPIED = 'Occupied';
+    const STATUS_LOADING = 'Loading'; 
+    const STATUS_MAINTENANCE = 'Maintenance';
+
+    const TYPE_LOADING = 'Loading';
+    const TYPE_UNLOADING = 'Unloading';
+    const TYPE_FREE = 'Unloading';
+
     public function warehouse()
     {
         return $this->belongsTo(Warehouse::class, 'warehouse');

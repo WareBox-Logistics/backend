@@ -49,6 +49,21 @@ class CompanyController extends Controller
         }
     }
 
+    public function getAllCompaniesWithServices() {
+        try {
+            $companies = Company::with('service')->get();
+
+            return response()->json([
+                'companies' => $companies
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error fetching companies with services',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function store(Request $request){
         try{
 

@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Dock;
 use App\Models\DockAssignment;
 use Illuminate\Support\Carbon;
+use App\Models\Delivery;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DockController extends Controller
 {
@@ -190,5 +193,134 @@ public function releaseDock(Request $request)
         'message' => 'Dock released successfully',
         'assignment' => $assignment->fresh()
     ]);
+    }
+
+
+    public function setToLoading($delivery)
+    {
+        try {
+            $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($delivery);
+
+
+            Log::debug('Delivery Loading Request', [
+                'delivery_id' => $delivery,
+                'current_status' => $delivery->status
+            ]);
+    
+            if ($delivery->status !== Delivery::STATUS_DOCKING) {
+                return response()->json([
+                    'message' => 'Delivery must be in Docking status before Loading',
+                    'current_status' => $delivery->status
+                ], 400);
+            }
+    
+            if (!$delivery->dockAssignment) {
+                return response()->json([
+                    'message' => 'No dock assignment found for this delivery',
+                ], 400);
+            }
+    
+            if (!$delivery->dock || $delivery->dock->status !== 'Occupied' || $delivery->dock->type !== 'Loading') {
+                return response()->json([
+                    'message' => 'Associated dock is not properly configured for loading',
+                    'dock_status' => $delivery->dock?->status,
+                    'dock_type' => $delivery->dock?->type
+                ], 400);
+            }
+    
+            DB::transaction(function () use ($delivery) {
+                $delivery->update([
+                    'status' => Delivery::STATUS_LOADING,
+                    'updated_at' => now()
+                ]);
+                
+                $delivery->dockAssignment->update([
+                    'status' => 'loading'
+                ]);
+                
+            });
+    
+            return response()->json([
+                'message' => 'Delivery status updated to Loading',
+                'delivery_id' => $delivery->id,
+                'new_status' => Delivery::STATUS_LOADING,
+                'dock_assignment_status' => 'Loading'
+            ]);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update delivery to Loading status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function confirmDeliveryArrival($deliveryID) 
+    {
+        try {
+            $delivery = Delivery::with(['dockAssignment', 'dock'])->findOrFail($deliveryID);
+    
+            Log::debug('Delivery Arrival Confirmation Request', [
+                'delivery_id' => $delivery->id,
+                'current_status' => $delivery->status
+            ]);
+    
+            // Validate current status
+            if ($delivery->status !== Delivery::STATUS_DELIVERING) {
+                return response()->json([
+                    'message' => 'Delivery must be in Delivering status before confirming arrival',
+                    'current_status' => $delivery->status
+                ], 400);
+            }
+    
+            DB::transaction(function () use ($delivery) {
+                $delivery->update([
+                    'status' => Delivery::STATUS_DELIVERED,
+                    'completed_date' => now(),
+                    'updated_at' => now()
+                ]);
+            });
+    
+            return response()->json([
+                'message' => 'Delivery successfully marked as completed',
+                'delivery_id' => $delivery->id,
+                'new_status' => Delivery::STATUS_DELIVERED 
+            ]);
+    
+        } catch (\Exception $e) {
+            Log::error('Delivery completion failed: '.$e->getMessage());
+            return response()->json([
+                'message' => 'Failed to confirm delivery arrival',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getDocksByFilter(Request $request)
+{
+    try {
+        $status = $request->input('status'); // p. ej. "Available", "Occupied", ...
+
+        // Armamos la query
+        $query = Dock::with('warehouse');
+
+        if (!is_null($status)) {
+            $query->where('status', $status);
+        }
+
+        $docks = $query->get();
+
+        return response()->json([
+            'message' => 'Filtered docks retrieved successfully',
+            'docks'   => $docks
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Error fetching filtered docks',
+            'error'   => $e->getMessage()
+        ], 500);
+    }
 }
 }
+
+

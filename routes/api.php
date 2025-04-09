@@ -30,9 +30,13 @@ use App\Http\Controllers\ModellController;
 use App\Http\Controllers\ParkingLotController;
 use App\Http\Controllers\ProblemController;
 use App\Services\VehicleAvailabilityService;
+use App\Http\Controllers\DeliveryConfirmationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 
 //E N D P O I N T S
 
@@ -49,15 +53,22 @@ Route::apiResource('role',RoleController::class)->middleware('auth:sanctum');
 Route::apiResource('company',CompanyController::class)->middleware('auth:sanctum');
 //Delivery
 Route::apiResource('delivery',DeliveryController::class)->middleware('auth:sanctum');
+Route::get('/driver/{driverId}/vehicle', [VehicleController::class, 'getDriverVehicle'])->middleware('auth:sanctum');
 Route::post('delivery-driver', [DeliveryController::class, 'getDeliveriesBasedOnDriver'])->middleware('auth:sanctum');
 Route::get('/deliveries/current-and-future', [DeliveryController::class, 'currentAndFutureDeliveries'])->middleware('auth:sanctum');
 Route::get('delivery/filtered/{deliveryID}', [DeliveryController::class, 'filteredDelivery'])->middleware('auth:sanctum');
+Route::post('/dock-assignments', [DockAssignmentController::class, 'assignDock']);
+Route::patch('/deliveries/{delivery}/start-delivering', [DeliveryController::class, 'startDelivering'])->middleware('auth:sanctum');
+Route::get('/deliveries/{delivery}/status', [DeliveryController::class, 'getStatus'])->middleware('auth:sanctum');
+Route::patch('/deliveries/{delivery}/complete', [DockController::class, 'confirmDeliveryArrival'])->middleware('auth:sanctum');
 //Delivery Detail
 Route::apiResource('delivery-detail',DeliveryDetailController::class)->middleware('auth:sanctum');
 //Employee
 Route::apiResource('employee',EmployeeController::class)->middleware('auth:sanctum');
 //Driver
-Route::get('driver', [EmployeeController::class, 'getDrivers'])->middleware('auth:sanctum');
+Route::get('driver', [EmployeeController::class, 'getDrivers']); //->middleware('auth:sanctum');
+//Operator
+Route::get('operator', [EmployeeController::class, 'getOperators']); //->middleware('auth:sanctum');
 //Client
 Route::get('client', [EmployeeController::class, 'getClients'])->middleware('auth:sanctum');
 //Location
@@ -83,6 +94,8 @@ Route::apiResource('model',ModellController::class)->middleware('auth:sanctum');
 Route::post('docks/check-availability', [DockController::class, 'checkAvailability'])->middleware('auth:sanctum');
 Route::post('docks/reserve', [DockController::class, 'reserveDock'])->middleware('auth:sanctum');
 Route::post('docks/release', [DockController::class, 'releaseDock'])->middleware('auth:sanctum');
+Route::patch('docks/{id}/set-loading', [DockController::class, 'setToLoading'])->middleware('auth:sanctum');
+Route::patch('/deliveries/{delivery}/set-docking', [DeliveryController::class, 'setToDocking'])->middleware('auth:sanctum');
 
 //Derian
 Route::apiResource('box-inventory', BoxInventoryController::class)->middleware('auth:sanctum');
@@ -93,7 +106,10 @@ Route::get('docks/warehouse/{warehouseId}', [DockController::class, 'getByWareho
 Route::apiResource('rack', RackController::class)->middleware('auth:sanctum');
 Route::apiResource('storage-rack-pallet', StorageRackPalletController::class)->middleware('auth:sanctum');
 Route::put('/dock-assignments/{truck}', [DockAssignmentController::class, 'update'])->middleware('auth:sanctum');
-
+Route::get('/docks/reservations/{dockId}', [DockAssignmentController::class, 'dockReservations']);
+Route::get('/dashboard-stats', [PalletController::class, 'getDashboardStats'])->middleware('auth:sanctum');
+Route::get('/pallets/filter', [PalletController::class, 'getPalletsByFilter'])->middleware('auth:sanctum');
+Route::get('/docks/filter', [DockController::class, 'getDocksByFilter'])->middleware('auth:sanctum');
 //Pallets
 Route::post('pallet/warehouse-company', [PalletController::class, 'PalletsFromWarehouse'])->middleware('auth:sanctum');
 
@@ -101,10 +117,19 @@ Route::put('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::
 Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletController::class, 'destroy']);
 
 //Dispatch
+Route::get('report/without-issue', [ReportController::class, 'reportsWithoutIssue']);
+
+
 Route::apiResource('report', ReportController::class);
 Route::apiResource('problem', ProblemController::class);
+
+Route::get('issue/without-support', [IssueController::class, 'issueWithoutSupport']);
+
 Route::apiResource('issue', IssueController::class);
+
+
 Route::apiResource('support', SupportController::class);
+
 
 //Parking
 Route::post('/lots/vehicle/location', [LotController::class, 'findVehicleParkingLocation'])->middleware('auth:sanctum');
@@ -122,6 +147,22 @@ Route::apiResource('category', CategoryController::class)->middleware('auth:sanc
 //Product
 Route::apiResource('product', ProductController::class)->middleware('auth:sanctum');
 Route::get('product/company/{company}', [ProductController::class, 'getAllProductsByCompany'])->middleware('auth:sanctum');
+
+
+
+
+//OPTIMIZED
+Route::get('companies/all', [CompanyController::class, 'getAllCompaniesWithServices'])->middleware('auth:sanctum');
+Route::get('deliveries/all', [DeliveryController::class, 'getAllDeliveriesWithDetails'])->middleware('auth:sanctum');
+Route::get('deliveries/company', [DeliveryController::class, 'getDeliveriesByCompany'])->middleware('auth:sanctum');
+Route::get('locations/company', [LocationController::class, 'getLocationsByCompany'])->middleware('auth:sanctum');
+Route::get('pallets/all', [PalletController::class, 'getAllPalletsWithDetails'])->middleware('auth:sanctum');
+Route::get('pallets/company', [PalletController::class, 'getPalletsByCompany'])->middleware('auth:sanctum');
+Route::get('products/all', [ProductController::class, 'getAllProductsWithDetails'])->middleware('auth:sanctum');
+Route::get('products/company', [ProductController::class, 'getProductsWithPalletsAndBoxesByCompany'])->middleware('auth:sanctum');
+
+
+
 
 Route::post('/proxy/optima', function (Request $request) {
     try {
@@ -207,5 +248,49 @@ Route::get('/test-reservation', function(VehicleAvailabilityService $service) {
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ], 500);
+    }
+});
+
+Route::middleware('auth:sanctum')->group(function() {
+    Route::post('/deliveries/{delivery}/generate-code', 
+        [DeliveryConfirmationController::class, 'generateCode']);
+        
+    Route::post('/deliveries/confirm-by-code', 
+        [DeliveryConfirmationController::class, 'confirmByCode']);
+});
+
+Route::post('/test-notification', function() {
+    $request = request();
+    
+    $request->validate([
+        'fcm_token' => 'required|string',
+        'title' => 'sometimes|string',
+        'body' => 'sometimes|string'
+    ]);
+
+    $token = $request->fcm_token;
+    $title = $request->title ?? 'Test Notification';
+    $body = $request->body ?? 'This is a test notification from your Laravel API';
+
+    try {
+        $factory = (new Factory)
+            ->withServiceAccount(storage_path('app/warebox-86369-firebase-adminsdk-fbsvc-242222a733.json')
+        );
+
+        $messaging = $factory->createMessaging();
+
+        $notification = Notification::create($title, $body);
+
+        $message = CloudMessage::new()
+            ->withNotification($notification)
+            ->withData(['test' => 'true', 'time' => now()->toDateTimeString()])
+            ->toToken($token); // Updated method
+
+        $messaging->send($message);
+
+        return response()->json(['success' => true, 'message' => 'Notification sent']);
+
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
     }
 });
