@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Issue;
 use App\Models\Pallet;
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class IssueController extends Controller
 {
@@ -107,6 +109,51 @@ class IssueController extends Controller
                 'error' => 'Error deleting a company',
                 'message' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function issueStatusStats()
+    {
+        try {
+            // Definir los status posibles en el orden deseado
+            $statuses = ['WIP', 'DONE', 'WAIT'];
+            
+            // Función para obtener estadísticas por rango de fechas
+            $getStats = function ($startDate, $endDate) use ($statuses) {
+                $stats = Issue::select('status', DB::raw('count(*) as total'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('status')
+                    ->get()
+                    ->pluck('total', 'status')
+                    ->toArray();
+                
+                // Asegurar que todos los status estén presentes
+                $completeStats = [];
+                foreach ($statuses as $status) {
+                    $completeStats[$status] = $stats[$status] ?? 0;
+                }
+                
+                return $completeStats;
+            };
+
+            // Fechas de referencia
+            $now = Carbon::now();
+            $todayStart = Carbon::today();
+            $weekStart = Carbon::now()->startOfWeek();
+            $monthStart = Carbon::now()->startOfMonth();
+
+            return response()->json([
+                'today' => $getStats($todayStart, $now),
+                'this_week' => $getStats($weekStart, $now),
+                'this_month' => $getStats($monthStart, $now),
+                'statuses' => $statuses // Para referencia en el frontend
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Error getting issue status statistics',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
 

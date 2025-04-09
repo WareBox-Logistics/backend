@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Report;
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -101,6 +103,63 @@ class ReportController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'error' => 'Error deleting a company',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function topProblems()
+    {
+        try {
+            // Hoy
+            $today = Carbon::today();
+            $topToday = Report::with('problem')
+                ->select('problem', DB::raw('count(*) as report_count'))
+                ->whereDate('created_at', $today)
+                ->groupBy('problem')
+                ->orderByDesc('report_count')
+                ->limit(5)
+                ->get();
+
+            // Esta semana (desde el inicio de la semana hasta hoy)
+            $startOfWeek = Carbon::now()->startOfWeek();
+            $topThisWeek = Report::with('problem')
+                ->select('problem', DB::raw('count(*) as report_count'))
+                ->whereBetween('created_at', [$startOfWeek, Carbon::now()])
+                ->groupBy('problem')
+                ->orderByDesc('report_count')
+                ->limit(5)
+                ->get();
+
+            // Este mes (desde el inicio del mes hasta hoy)
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $topThisMonth = Report::with('problem')
+                ->select('problem', DB::raw('count(*) as report_count'))
+                ->whereBetween('created_at', [$startOfMonth, Carbon::now()])
+                ->groupBy('problem')
+                ->orderByDesc('report_count')
+                ->limit(5)
+                ->get();
+
+            // Formatear los resultados para incluir el problema y el conteo
+            $formatResults = function($results) {
+                return $results->map(function($item) {
+                    return [
+                        'problem' => $item->problem, // Datos completos del problema
+                        'report_count' => $item->report_count // Cantidad de reportes
+                    ];
+                });
+            };
+
+            return response()->json([
+                'today' => $formatResults($topToday),
+                'this_week' => $formatResults($topThisWeek),
+                'this_month' => $formatResults($topThisMonth)
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Error getting top problems with counts',
                 'message' => $e->getMessage()
             ], 500);
         }
