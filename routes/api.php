@@ -119,16 +119,24 @@ Route::delete('storage-rack-pallet/{pallet}/{rack}', [StorageRackPalletControlle
 //Dispatch
 Route::get('report/without-issue', [ReportController::class, 'reportsWithoutIssue']);
 
+Route::get('report/top-problems', [ReportController::class, 'topProblems']);
 
 Route::apiResource('report', ReportController::class);
 Route::apiResource('problem', ProblemController::class);
 
 Route::get('issue/without-support', [IssueController::class, 'issueWithoutSupport']);
 
+Route::get('issue/status-stats', [IssueController::class, 'issueStatusStats']);
+
 Route::apiResource('issue', IssueController::class);
 
 
+Route::get('support/status-stats', [SupportController::class, 'supportStatusStats']);
+
+
 Route::apiResource('support', SupportController::class);
+
+
 
 
 //Parking
