@@ -22,6 +22,5 @@ jobs:
         script: |
           sudo -s
           sudo -i -u laravel_demo
-          cd /home/www/
           cd backend/
           git pull origin main
